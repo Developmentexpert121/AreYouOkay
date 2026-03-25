@@ -20,7 +20,12 @@ async def lifespan(app: FastAPI):
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="AreYouOkay SMS Check-In API", lifespan=lifespan)
+app = FastAPI(
+    title="AreYouOkay SMS Check-In API", 
+    lifespan=lifespan,
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json"
+)
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 origins = [
