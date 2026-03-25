@@ -4,10 +4,13 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 db_url = os.getenv("DATABASE_URL")
 
-# Handle empty or missing environment variable
-if db_url and db_url.strip():
+# Handle empty, missing, or literal interpolation strings
+if db_url and db_url.strip() and not db_url.startswith("${"):
     SQLALCHEMY_DATABASE_URL = db_url.strip()
 else:
+    if db_url and db_url.startswith("${"):
+        print(f"⚠️ WARNING: DATABASE_URL looks like an un-interpolated string: '{db_url}'")
+        print("Check your DigitalOcean App Settings. Do not manually enter ${...} as the value.")
     SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 
 # Debug logging (safe)
