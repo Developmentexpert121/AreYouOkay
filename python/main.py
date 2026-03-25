@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
@@ -42,12 +42,16 @@ app.add_middleware(
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "areyouokay-super-secret-session-key"))
 
-app.include_router(users.router)
-app.include_router(twilio.router)
-app.include_router(stripe_payments.router)
+# Group routers under /api prefix for better production routing
+api_router = APIRouter(prefix="/api")
+api_router.include_router(users.router)
+api_router.include_router(twilio.router)
+api_router.include_router(stripe_payments.router)
 
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
-@app.get("/")
+@api_router.get("/")
 def read_root():
     return {"status": "ok", "message": "AreYouOkay API Backend Running"}
+
+app.include_router(api_router)
+
+app.mount("/api/uploads", StaticFiles(directory="uploads"), name="uploads")
