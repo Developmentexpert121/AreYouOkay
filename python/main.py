@@ -23,9 +23,8 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="AreYouOkay SMS Check-In API", 
     lifespan=lifespan,
-    docs_url=None, 
-    redoc_url=None, 
-    openapi_url=None
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json"
 )
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
