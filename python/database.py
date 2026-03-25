@@ -2,9 +2,15 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+db_url = os.getenv("DATABASE_URL")
 
-# Fix for postgres:// issue
+# Handle empty or missing environment variable
+if db_url and db_url.strip():
+    SQLALCHEMY_DATABASE_URL = db_url
+else:
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+
+# Fix for postgres:// issue (common in some hosting platforms)
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
