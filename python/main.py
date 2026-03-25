@@ -59,4 +59,4 @@ def read_root():
 
 app.include_router(api_router)
 
-app.mount("/api/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
