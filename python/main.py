@@ -23,8 +23,8 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="AreYouOkay SMS Check-In API", 
     lifespan=lifespan,
-    docs_url="/api/docs",
-    openapi_url="/api/openapi.json"
+    docs_url="/docs",
+    openapi_url="/openapi.json"
 )
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
@@ -47,8 +47,8 @@ app.add_middleware(
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "areyouokay-super-secret-session-key"))
 
-# Group routers under /api prefix for better production routing
-api_router = APIRouter(prefix="/api")
+# Group routers (prefix removed because DigitalOcean handles /api routing)
+api_router = APIRouter()
 api_router.include_router(users.router)
 api_router.include_router(twilio.router)
 api_router.include_router(stripe_payments.router)
