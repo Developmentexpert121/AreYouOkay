@@ -1,0 +1,53 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from database import engine, Base
+import models
+from routers import users, twilio, stripe_payments
+from scheduler import start_scheduler
+from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
+import os
+
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+
+# Create database tables
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="AreYouOkay SMS Check-In API", lifespan=lifespan)
+
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+origins = [
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:5173",
+]
+if allowed_origins:
+    origins.extend([o.strip() for o in allowed_origins if o.strip()])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "areyouokay-super-secret-session-key"))
+
+app.include_router(users.router)
+app.include_router(twilio.router)
+app.include_router(stripe_payments.router)
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "AreYouOkay API Backend Running"}

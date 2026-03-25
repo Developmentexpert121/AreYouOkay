@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 98%; /* Softer, slightly cooler white */
+    --foreground: 224 71% 4%; /* Near black with a hint of navy */
+
+    /* Glassmorphism card surface */
+    --card: 0 0% 100% / 0.7; /* Increased translucency */
+    --card-foreground: 224 71% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+
+    /* Premium Indigo-Teal Palette */
+    --primary: 221 83% 53%; /* Vivid blue/indigo */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 214 32% 91% / 0.5;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 142 71% 45%; /* Vibrant emerald for contrast */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    /* Soft translucent borders & shadows */
+    --border: 220 13% 91% / 0.7;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+
+    --radius: 1.25rem; /* Slightly larger radius for a 'softer' feel */
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.12); /* Deep, soft shadow */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-surface {
+    @apply bg-card backdrop-blur-md border border-white/20 shadow-premium;
+  }
+
+  .mesh-gradient {
+    background-color: hsla(220, 33%, 98%, 1);
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(221, 83%, 53%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(142, 71%, 45%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(221, 83%, 53%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(142, 71%, 45%, 0.08) 0px, transparent 50%);
+  }
+
+  .card-elevated {
+    @apply bg-white rounded-[2rem] border border-border transition-all duration-300;
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-4px);
+  }
+
+  .stat-card {
+    @apply glass-surface p-8 rounded-[2rem] transition-all duration-300;
+  }
+
+  .stat-card:hover {
+    @apply border-primary/20 -translate-y-1;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-warning/10 text-warning border border-warning/20;
+  }
+
+  .badge-danger {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/20;
+  }
+
+  .badge-neutral {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border;
+  }
+
+  .page-header {
+    @apply text-3xl font-bold tracking-tight text-foreground sm:text-4xl;
+  }
+
+  .page-description {
+    @apply text-lg text-muted-foreground mt-2 max-w-2xl;
+  }
+
+  .btn-premium {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 active:scale-[0.98];
+  }
+
+  .btn-primary-premium {
+    @apply btn-premium bg-primary text-white shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-primary/30;
+  }
+
+  .btn-secondary-premium {
+    @apply btn-premium bg-white border border-border text-foreground hover:bg-slate-50 hover:border-slate-300;
+  }
+}
