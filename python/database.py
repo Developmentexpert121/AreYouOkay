@@ -6,9 +6,12 @@ db_url = os.getenv("DATABASE_URL")
 
 # Handle empty or missing environment variable
 if db_url and db_url.strip():
-    SQLALCHEMY_DATABASE_URL = db_url
+    SQLALCHEMY_DATABASE_URL = db_url.strip()
 else:
     SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+
+# Debug logging (safe)
+print(f"DATABASE_URL protocol: {SQLALCHEMY_DATABASE_URL.split(':', 1)[0]}, length: {len(SQLALCHEMY_DATABASE_URL)}")
 
 # Fix for postgres:// issue (common in some hosting platforms)
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
