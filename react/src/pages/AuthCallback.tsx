@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/api-config";
 
 export default function AuthCallback() {
   const navigate = useNavigate();

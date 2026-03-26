@@ -204,20 +204,7 @@ async def login_google_callback(request: Request, db: Session = Depends(database
             db.commit()
             db.refresh(user)
 
-        user_dict = {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "phone_number": getattr(user, "phone_number", ""),
-            "emergency_contact_name": getattr(user, "emergency_contact_name", ""),
-            "emergency_contact_phone": getattr(user, "emergency_contact_phone", ""),
-            "emergency_contact_name_2": getattr(user, "emergency_contact_name_2", ""),
-            "emergency_contact_phone_2": getattr(user, "emergency_contact_phone_2", ""),
-            "subscription_status": user.subscription_status,
-            "profile_picture": user.profile_picture,
-            "timezone": user.timezone,
-            "check_in_time": str(user.check_in_time) if user.check_in_time else None
-        }
+
         # Use reset_token as a temporary login token to avoid large base64 strings in URL
         temp_token = str(uuid.uuid4())
         user.reset_token = temp_token
@@ -230,6 +217,7 @@ async def login_google_callback(request: Request, db: Session = Depends(database
     except Exception as e:
         print(f"[OAuth Error]: {e}")
         return RedirectResponse(url=f"{frontend_url}/login?error=Google_Auth_Failed")
+
 
 @router.post("/exchange-token")
 async def exchange_token(payload: dict, db: Session = Depends(database.get_db)):
