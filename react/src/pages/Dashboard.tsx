@@ -163,7 +163,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-                Welcome back, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{user?.name.split(" ")[0]}</span>
+                Welcome back, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{user?.name?.split(" ")[0]}</span>
               </h1>
               <p className="text-gray-400 text-lg mt-2">
                 {isProfileIncomplete ? "Please complete your profile to enable all features." : "Everything looks good. You're doing great!"}

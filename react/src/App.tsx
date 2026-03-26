@@ -20,7 +20,13 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: React.ReactNode, requireAdmin?: boolean, requireUser?: boolean }) => {
   const savedUser = localStorage.getItem("user");
-  const user = savedUser ? JSON.parse(savedUser) : null;
+  let user = null;
+  try {
+    user = savedUser ? JSON.parse(savedUser) : null;
+  } catch (e) {
+    console.error("Failed to parse user from localStorage", e);
+    localStorage.removeItem("user");
+  }
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
 
   if (!user) {

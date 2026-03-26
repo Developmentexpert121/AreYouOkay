@@ -164,7 +164,15 @@ async def login_google(request: Request):
         frontend_url = os.environ.get("APP_FRONTEND_URL", "http://localhost:8080")
         return RedirectResponse(url=f"{frontend_url}/login?error=Google_Auth_Not_Configured")
         
-    redirect_uri = "http://127.0.0.1:8000/users/login/google/callback"
+    app_base_url = os.environ.get("APP_BASE_URL")
+    if app_base_url:
+        # On production (DigitalOcean), ensure this includes the /api prefix if routed that way
+        base_url = app_base_url.rstrip("/")
+        redirect_uri = f"{base_url}/users/login/google/callback"
+    else:
+        # For localhost dev, this auto-detects http://127.0.0.1:8000 or http://localhost:8000
+        redirect_uri = str(request.url_for('login_google_callback'))
+    
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 

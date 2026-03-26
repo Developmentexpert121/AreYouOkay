@@ -45,7 +45,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET", "areyouokay-super-secret-session-key"))
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=os.environ.get("SESSION_SECRET", "areyouokay-super-secret-session-key"),
+    same_site="lax",
+    https_only=False
+)
 
 # Group routers (prefix removed because DigitalOcean handles /api routing)
 api_router = APIRouter()
