@@ -144,7 +144,7 @@ export default function Profile() {
             {isAdmin ? <Shield className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
           </div>
           <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            AreYouOkay<span className="text-white"></span>
+            r u good?<span className="text-white"></span>
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">

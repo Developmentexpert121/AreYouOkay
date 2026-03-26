@@ -219,7 +219,7 @@ export default function Admin() {
             <Brain className="w-5 h-5 text-white" />
           </div>
           <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            AreYouOkay<span className="text-white">.admin</span>
+            r u good?<span className="text-white">.admin</span>
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-2 text-white">System Command</h1>

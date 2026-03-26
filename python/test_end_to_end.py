@@ -163,7 +163,7 @@ def test_end_to_end():
     
     escalated_statuses = {"escalated_1_sms", "escalated_1_voice", "escalated_2_sms", "escalated_2_voice", "escalated_3_sms", "escalated_3_voice"}
     if previous_status in escalated_statuses:
-        msg = f"UPDATE: {user.name} has just replied to their AreYouOkay check-in and is safe. The previous alert was a false alarm."
+        msg = f"UPDATE: {user.name} has just replied to their r u good? check-in and is safe. The previous alert was a false alarm."
         for contact in [
             (user.emergency_contact_phone, user.emergency_contact_name),
             (user.emergency_contact_phone_2, user.emergency_contact_name_2),

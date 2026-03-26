@@ -151,7 +151,7 @@ export default function ForgotPassword() {
             <Brain className="w-6 h-6 text-white" />
           </motion.div>
           <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            AreYouOkay<span className="text-white"></span>
+            r u good?<span className="text-white"></span>
           </span>
         </div>
 

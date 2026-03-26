@@ -43,9 +43,9 @@ async def create_checkout_session(user_id: int, db: Session = Depends(database.g
                     'price_data': {
                         'currency': 'usd',
                         'product_data': {
-                            'name': 'AreYouOkay - Monthly Subscription',
+                            'name': 'r u good? - Monthly Subscription',
                         },
-                        'unit_amount': 20000,  # $20 USD
+                        'unit_amount':643,  # $20 USD
                         'recurring': {
                             'interval': 'month',
                         },

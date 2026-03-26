@@ -67,7 +67,7 @@ export function AppSidebar() {
           </motion.div>
           {!collapsed && (
             <span className="font-bold text-white text-lg tracking-tight">
-              AreYouOkay
+              r u good?
             </span>
           )}
         </div>

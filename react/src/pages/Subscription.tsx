@@ -93,7 +93,7 @@ export default function Subscription() {
             <CreditCard className="w-5 h-5 text-white" />
           </div>
           <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            AreYouOkay<span className="text-white"></span>
+            r u good?<span className="text-white"></span>
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
@@ -159,7 +159,7 @@ export default function Subscription() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400">Amount</span>
-                  <span className="font-bold text-white">$200.00 / mo</span>
+                  <span className="font-bold text-white">$6.99.00 / mo</span>
                 </div>
               </div>
 
@@ -239,7 +239,7 @@ export default function Subscription() {
                       <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" /> Recommended Pro Plan
                     </div>
                     <h2 className="text-5xl font-extrabold tracking-tighter text-white">
-                      <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">$200</span>
+                      <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">$6.99</span>
                       <span className="text-xl font-medium text-gray-400">/mo</span>
                     </h2>
                     <p className="text-gray-400 font-medium mt-4 leading-relaxed max-w-sm">

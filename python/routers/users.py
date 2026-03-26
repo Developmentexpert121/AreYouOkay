@@ -48,7 +48,7 @@ def send_reset_email(to_email: str, reset_link: str):
     smtp_user = os.environ.get("MAIL_USERNAME")
     smtp_pass = os.environ.get("MAIL_PASSWORD")
     from_email = os.environ.get("MAIL_FROM_ADDRESS", smtp_user)
-    from_name = os.environ.get("MAIL_FROM_NAME", "AreYouOkay AI")
+    from_name = os.environ.get("MAIL_FROM_NAME", "r u good? AI")
 
     if not smtp_user or not smtp_pass:
         print("SMTP credentials not configured. Email will not be sent.")
@@ -57,7 +57,7 @@ def send_reset_email(to_email: str, reset_link: str):
     msg = MIMEMultipart()
     msg['From'] = f"{from_name} <{from_email}>"
     msg['To'] = to_email
-    msg['Subject'] = "Reset Your Password - AreYouOkay"
+    msg['Subject'] = "Reset Your Password - r u good?"
 
     html_content = f"""
     <html>
@@ -65,14 +65,14 @@ def send_reset_email(to_email: str, reset_link: str):
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           <h2 style="color: #333333; text-align: center;">Password Reset Request</h2>
           <p style="color: #555555; font-size: 16px;">Hello,</p>
-          <p style="color: #555555; font-size: 16px;">We received a request to reset your password for your AreYouOkay account. If you didn't make this request, you can safely ignore this email.</p>
+          <p style="color: #555555; font-size: 16px;">We received a request to reset your password for your r u good? account. If you didn't make this request, you can safely ignore this email.</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="{reset_link}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">Reset Password</a>
           </div>
           <p style="color: #555555; font-size: 16px;">Or copy and paste this link into your browser:</p>
           <p style="color: #3b82f6; font-size: 14px; word-break: break-all;">{reset_link}</p>
           <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;" />
-          <p style="color: #999999; font-size: 12px; text-align: center;">AreYouOkay AI &copy; 2026</p>
+          <p style="color: #999999; font-size: 12px; text-align: center;">r u good? AI &copy; 2026</p>
         </div>
       </body>
     </html>

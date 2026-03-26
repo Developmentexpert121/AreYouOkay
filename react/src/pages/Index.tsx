@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight, Shield, Clock, HeartHandshake, PhoneCall,
   CheckCircle2, Star, Bell, Users, MessageSquare, AlertTriangle, Sparkles,
-  Cpu, Network, Activity, Brain, Zap, Eye, BarChart3, Radar, Gauge
+  Cpu, Network, Activity, Brain, Zap, Eye, BarChart3, Radar, Gauge,
+  Facebook, Instagram, Linkedin, MapPin
 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { API_BASE_URL } from "@/lib/api-config";
@@ -143,7 +144,7 @@ export default function Index() {
               <Brain className="w-5 h-5 text-white" />
             </motion.div>
             <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              AreYouOkay<span className="text-white"></span>
+              r u good?<span className="text-white"></span>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
@@ -225,7 +226,7 @@ export default function Index() {
                 <Sparkles className="w-4 h-4 text-blue-400" />
               </motion.div>
               <span className="text-white text-[11px] font-bold tracking-widest uppercase">
-                AreYouOkay <span className="text-blue-400">AI Engine v2.0</span>
+                r u good? <span className="text-blue-400">AI Engine v2.0</span>
               </span>
             </motion.div>
 
@@ -380,7 +381,7 @@ export default function Index() {
                         <Brain className="w-8 h-8 text-white" />
                       </motion.div>
                       <p className="text-gray-400 text-[10px] font-semibold tracking-widest uppercase mb-1">
-                        AreYouOkay
+                        r u good?
                       </p>
                       <h3 className="text-white text-xl font-bold leading-tight mb-1">
                         AI Check-In
@@ -699,7 +700,7 @@ export default function Index() {
               </p>
               <div className="flex items-end justify-center gap-1 mb-1">
                 <span className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  $200
+                  $6.99
                 </span>
                 <span className="text-gray-400 mb-2">/month</span>
               </div>
@@ -722,15 +723,13 @@ export default function Index() {
                   </li>
                 ))}
               </ul>
-
               <button
                 onClick={handleCheckout}
                 disabled={isSubscribed && !isAdmin}
-                className={`block w-full text-center font-bold py-3.5 rounded-2xl transition-all ${
-                  isSubscribed && !isAdmin
-                    ? "bg-white/10 text-gray-400 cursor-not-allowed border border-white/20"
-                    : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-xl hover:shadow-blue-500/30 cursor-pointer"
-                }`}
+                className={`block w-full text-center font-bold py-3.5 rounded-2xl transition-all ${isSubscribed && !isAdmin
+                  ? "bg-white/10 text-gray-400 cursor-not-allowed border border-white/20"
+                  : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-xl hover:shadow-blue-500/30 cursor-pointer"
+                  }`}
               >
                 {isAdmin ? "Manage Dashboard" : isSubscribed ? "Plan Active" : "Upgrade Now"}
               </button>
@@ -739,31 +738,128 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-black/90 py-12 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Brain className="w-5 h-5 text-white" />
+      {/* ── PREMIUM FOOTER ── */}
+      <footer className="relative bg-[#050505] pt-24 pb-12 overflow-hidden border-t border-white/5">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-[400px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32 mb-20">
+            {/* Column 1: Brand & Identity */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/20 rotate-3">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-white font-black text-2xl tracking-tighter uppercase">
+                  r u good?
+                </span>
+              </div>
+
+              <p className="text-gray-400 text-lg leading-relaxed max-w-md font-medium">
+                Redefining personal safety through <span className="text-white">intelligent AI automation</span>.
+                Keep your loved ones informed, always.
+              </p>
+
+              <div className="flex flex-col gap-5">
+                <a
+                  href="https://maps.google.com/?q=1982+Providence+Parkway,+Suite+251+Mt.+Juliet,+TN+37122"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-4 text-gray-400 hover:text-white transition-all group w-fit"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500/10 group-hover:border-blue-500/50 transition-all">
+                    <MapPin className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Headquarters</span>
+                    <span className="text-sm font-semibold">1982 Providence Parkway, Mt. Juliet, TN</span>
+                  </div>
+                </a>
+
+                <div className="flex gap-4 pt-2">
+                  {[
+                    { icon: Facebook, href: "https://www.facebook.com/MichellePriceJohnson", color: "hover:bg-blue-600/20 hover:text-blue-500" },
+                    { icon: Linkedin, href: "https://www.linkedin.com/in/michellepricejohnson/", color: "hover:bg-blue-400/20 hover:text-blue-400" },
+                    { icon: Instagram, href: "https://www.instagram.com/michellepricejohnson/", color: "hover:bg-pink-600/20 hover:text-pink-500" }
+                  ].map((s, i) => (
+                    <motion.a
+                      key={i}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ y: -5, scale: 1.05 }}
+                      className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 transition-all ${s.color} shadow-sm backdrop-blur-md`}
+                    >
+                      <s.icon className="w-6 h-6" />
+                    </motion.a>
+                  ))}
+                </div>
+              </div>
             </div>
-            <span className="text-white font-bold text-lg">
-              AreYouOkay
-            </span>
+
+            {/* Column 2: Success Lab & Quote */}
+            <div className="space-y-10">
+              <div className="space-y-8">
+                <h4 className="text-white font-bold text-sm uppercase tracking-[0.2em] opacity-50">Business Vertical</h4>
+                <div className="space-y-6">
+                  <div className="group">
+                    <h5 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-yellow-500" /> Success Lab
+                    </h5>
+                    <div className="flex flex-col gap-4">
+                      <a href="https://successlabmj.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-2 group/link">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/40 group-hover/link:bg-blue-400 transition-colors" />
+                        successlabmj.com
+                      </a>
+                      <a href="https://michellepricejohnson.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-2 group/link">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/40 group-hover/link:bg-blue-400 transition-colors" />
+                        michellepricejohnson.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
+                    <a href="mailto:mpj@successlabhq.com" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+                        <MessageSquare className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <span className="text-sm font-medium">mpj@successlabhq.com</span>
+                    </a>
+                    <a href="tel:6154366176" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+                        <PhoneCall className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <span className="text-sm font-medium">615-436-6176 x 3</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
           </div>
-          <div className="flex gap-8 text-sm font-medium text-gray-400">
-            <a href="#" className="hover:text-blue-400 transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-blue-400 transition-colors">
-              Terms of Service
-            </a>
-            <a href="#" className="hover:text-blue-400 transition-colors">
-              Contact Support
-            </a>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <p className="text-gray-600 text-xs font-semibold tracking-wider">
+                © 2026 R U GOOD?. ALL RIGHTS RESERVED.
+              </p>
+              <div className="hidden md:block w-[1px] h-4 bg-white/10" />
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Network Secure</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-8">
+              <span className="text-[10px] font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                Crafted by <span className="text-gray-400">Michelle Price-Johnson</span>
+              </span>
+            </div>
           </div>
-          <p className="text-gray-500 text-sm">
-            © 2026 AreYouOkay. All rights reserved.
-          </p>
         </div>
       </footer>
     </div>

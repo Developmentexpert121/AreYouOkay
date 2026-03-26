@@ -167,7 +167,7 @@ def escalations_check():
                 db.commit()
 
                 if client and user.phone_number:
-                    body = f"AreYouOkay Reminder: We haven't heard from you yet. Please reply YES if you're okay, or NO if you need help."
+                    body = f"r u good? Reminder: We haven't heard from you yet. Please reply YES if you're okay, or NO if you need help."
                     ok = _send_sms(client, user.phone_number, body)
                     _log_alert(db, user.id, checkin.id, "reminder", user.name, user.phone_number, body, ok)
 

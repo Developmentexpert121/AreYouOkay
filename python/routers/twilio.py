@@ -67,7 +67,7 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
                 if previous_status in escalated_statuses and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
                     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
                     msg = (
-                        f"UPDATE: {user.name} has just replied to their AreYouOkay check-in "
+                        f"UPDATE: {user.name} has just replied to their r u good? check-in "
                         f"and is safe. The previous alert was a false alarm."
                     )
                     for contact in [
@@ -122,7 +122,7 @@ async def twilio_voice_emergency(request: Request):
         timeout=10
     )
     gather.say(
-        "URGENT. This is an automated alert from the Are You Okay safety system. "
+        "URGENT. This is an automated alert from the r u good? safety system. "
         "The person who listed you as their emergency contact has missed all check-in attempts "
         "and may be in danger. "
         "Please press 1 to confirm you have received this message and are taking action."
@@ -202,7 +202,7 @@ async def twilio_voice(request: Request):
         method="POST",
         timeout=10
     )
-    gather.say("Hello. This is the Are You Okay AI safety check-in. "
+    gather.say("Hello. This is the r u good? AI safety check-in. "
                "If you are safe, please press 1. "
                "If you need emergency assistance, please press 2.")
     
@@ -256,7 +256,7 @@ async def twilio_gather(request: Request, db: Session = Depends(database.get_db)
             emergency_number = user.emergency_contact_phone.replace(" ", "")
             contact_name = user.emergency_contact_name or "Emergency Contact"
             msg = (
-                f"URGENT: {user.name} pressed 2 (needs help) during an automated AreYouOkay "
+                f"URGENT: {user.name} pressed 2 (needs help) during an automated r u good? "
                 f"voice call. Please contact them immediately."
             )
             ok = _send_sms(client, emergency_number, msg)
