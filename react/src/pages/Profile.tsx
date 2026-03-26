@@ -6,9 +6,10 @@ import { motion } from "framer-motion";
 import { User, Shield, Upload, Trash2, Camera, Globe, Clock, Phone, Heart, Loader2, Brain } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api-config";
 import { useRef } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Profile() {
-  const [user, setUser] = useState<any>(null);
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -27,24 +28,21 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setUser(parsed);
+    if (user) {
       setFormData({
-        name: parsed.name || "",
-        phone_number: parsed.phone_number || "",
-        timezone: parsed.timezone || "UTC",
-        check_in_time: parsed.check_in_time || "09:00",
-        emergency_contact_name: parsed.emergency_contact_name || "",
-        emergency_contact_phone: parsed.emergency_contact_phone || "",
-        emergency_contact_name_2: parsed.emergency_contact_name_2 || "",
-        emergency_contact_phone_2: parsed.emergency_contact_phone_2 || "",
-        reminder_delay_minutes: parsed.reminder_delay_minutes ?? 30,
-        escalation_delay_minutes: parsed.escalation_delay_minutes ?? 60,
+        name: user.name || "",
+        phone_number: user.phone_number || "",
+        timezone: user.timezone || "UTC",
+        check_in_time: user.check_in_time || "09:00",
+        emergency_contact_name: user.emergency_contact_name || "",
+        emergency_contact_phone: user.emergency_contact_phone || "",
+        emergency_contact_name_2: user.emergency_contact_name_2 || "",
+        emergency_contact_phone_2: user.emergency_contact_phone_2 || "",
+        reminder_delay_minutes: user.reminder_delay_minutes ?? 30,
+        escalation_delay_minutes: user.escalation_delay_minutes ?? 60,
       });
     }
-  }, []);
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
@@ -66,11 +64,8 @@ export default function Profile() {
         throw new Error(data.detail || "Failed to update profile");
       }
 
-      const updatedUser = await res.json();
-      const mergedUser = { ...user, ...updatedUser };
-      localStorage.setItem("user", JSON.stringify(mergedUser));
-      setUser(mergedUser);
-
+      const updatedUserData = await res.json();
+      updateUser(updatedUserData);
       toast.success("Profile updated successfully!");
     } catch (err: any) {
       toast.error(err.message);
@@ -95,10 +90,8 @@ export default function Profile() {
 
       if (!res.ok) throw new Error("Failed to upload avatar");
 
-      const updatedUser = await res.json();
-      const mergedUser = { ...user, ...updatedUser };
-      localStorage.setItem("user", JSON.stringify(mergedUser));
-      setUser(mergedUser);
+      const updatedUserAvatar = await res.json();
+      updateUser(updatedUserAvatar);
       toast.success("Profile picture updated!");
     } catch (err: any) {
       toast.error(err.message);
@@ -116,10 +109,8 @@ export default function Profile() {
       });
       if (!res.ok) throw new Error("Failed to remove avatar");
 
-      const updatedUser = await res.json();
-      const mergedUser = { ...user, ...updatedUser };
-      localStorage.setItem("user", JSON.stringify(mergedUser));
-      setUser(mergedUser);
+      const updatedUserNoAvatar = await res.json();
+      updateUser(updatedUserNoAvatar);
       toast.success("Profile picture removed!");
     } catch (err: any) {
       toast.error(err.message);

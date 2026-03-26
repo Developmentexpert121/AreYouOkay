@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { API_BASE_URL } from "@/lib/api-config";
+import { useAuth } from "@/lib/auth-context";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -102,8 +103,7 @@ export default function Index() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX, mouseY]);
 
-  const savedUser = localStorage.getItem("user");
-  const user = savedUser ? JSON.parse(savedUser) : null;
+  const { user } = useAuth();
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 

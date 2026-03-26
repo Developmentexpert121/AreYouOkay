@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/api-config";
+import { useAuth } from "@/lib/auth-context";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -25,7 +27,7 @@ export default function AuthCallback() {
           }
           
           const user = await res.json();
-          localStorage.setItem("user", JSON.stringify(user));
+          login(user); // Use reactive login
           toast.success("Successfully authenticated with Google!");
           navigate("/dashboard");
         } else {
@@ -35,7 +37,7 @@ export default function AuthCallback() {
             const b64 = hash.replace("#data=", "");
             const jsonStr = atob(b64);
             const user = JSON.parse(jsonStr);
-            localStorage.setItem("user", JSON.stringify(user));
+            login(user); // Use reactive login
             toast.success("Successfully authenticated with Google!");
             navigate("/dashboard");
           } else {
@@ -50,7 +52,7 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-  }, [navigate]);
+  }, [navigate, login]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
