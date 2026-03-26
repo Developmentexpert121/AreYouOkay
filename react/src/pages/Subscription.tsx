@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/components/StatusBadge";
 import { API_BASE_URL } from "@/lib/api-config";
 import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth-context";
 
 const features = [
   "Unlimited automated check-ins",
@@ -18,9 +17,14 @@ const features = [
 
 export default function Subscription() {
   const navigate = useNavigate();
-  const { user, login: updateAuthUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
 
   const isSubscribed = user?.subscription_status === "active";
 
@@ -57,7 +61,8 @@ export default function Subscription() {
           const data = await res.json();
           if (data.status === "success") {
             const updatedUser = { ...user, ...data.user };
-            updateAuthUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setUser(updatedUser);
             toast.success("Subscription activated! Redirecting to dashboard...");
             setTimeout(() => navigate("/dashboard"), 1500);
           } else {
@@ -96,7 +101,8 @@ export default function Subscription() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Failed to cancel subscription");
       const updatedUser = { ...user, subscription_status: "inactive", stripe_subscription_id: null };
-      updateAuthUser(updatedUser as any);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
       toast.success("Subscription cancelled successfully.");
     } catch (err: any) {
       toast.error(err.message);

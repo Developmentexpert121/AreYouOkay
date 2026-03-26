@@ -53,8 +53,8 @@ app.add_middleware(
     https_only=False  # Keep False if behind a proxy that terminates SSL, but allow for state to persist
 )
 
-# Group routers
-api_router = APIRouter(prefix="/api")
+# Group routers (prefix removed because DigitalOcean handles /api routing)
+api_router = APIRouter()
 api_router.include_router(users.router)
 api_router.include_router(twilio.router)
 api_router.include_router(stripe_payments.router)

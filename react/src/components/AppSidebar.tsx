@@ -5,11 +5,9 @@ import {
   Shield,
   LogOut,
   CheckCircle2,
-  Brain,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth-context";
 import {
   Sidebar,
   SidebarContent,
@@ -39,8 +37,9 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
 
+  const savedUser = localStorage.getItem("user");
+  const user = savedUser ? JSON.parse(savedUser) : null;
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 
@@ -49,7 +48,7 @@ export function AppSidebar() {
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    logout();
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
@@ -61,11 +60,11 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="p-6 flex items-center gap-3">
           <motion.div
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.5 }}
-            className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
+            whileHover={{ rotate: 10, scale: 1.1 }}
+            transition={{ duration: 0.3 }}
+            className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-lg"
           >
-            <Brain className="w-6 h-6 text-white" />
+            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
           </motion.div>
           {!collapsed && (
             <span className="font-bold text-white text-lg tracking-tight">

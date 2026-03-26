@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/api-config";
-import { useAuth } from "@/lib/auth-context";
 
 const timezones = [
   "UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
@@ -17,7 +16,7 @@ const timezones = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, login: updateAuthUser } = useAuth();
+  const [user, setUser] = useState<any>(null);
   const [checkins, setCheckins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingProfile, setUpdatingProfile] = useState(false);
@@ -33,16 +32,21 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (!user) return;
-
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      navigate("/login");
+      return;
+    }
+    const usr = JSON.parse(savedUser);
+    setUser(usr);
     setProfileForm({
-      phone_number: user.phone_number || "",
-      timezone: user.timezone || "UTC",
-      check_in_time: user.check_in_time || "09:00",
-      emergency_contact_name: user.emergency_contact_name || "",
-      emergency_contact_phone: user.emergency_contact_phone || "",
-      emergency_contact_name_2: user.emergency_contact_name_2 || "",
-      emergency_contact_phone_2: user.emergency_contact_phone_2 || ""
+      phone_number: usr.phone_number || "",
+      timezone: usr.timezone || "UTC",
+      check_in_time: usr.check_in_time || "09:00",
+      emergency_contact_name: usr.emergency_contact_name || "",
+      emergency_contact_phone: usr.emergency_contact_phone || "",
+      emergency_contact_name_2: usr.emergency_contact_name_2 || "",
+      emergency_contact_phone_2: usr.emergency_contact_phone_2 || ""
     });
 
     // Check for Stripe session success
@@ -53,7 +57,8 @@ export default function Dashboard() {
         .then(res => res.json())
         .then(data => {
           if (data.status === "success" && data.user) {
-            updateAuthUser(data.user);
+            localStorage.setItem("user", JSON.stringify(data.user));
+            setUser(data.user);
             toast.success("Subscribed successfully! Welcome to Pro.");
             // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -62,14 +67,14 @@ export default function Dashboard() {
         .catch(err => console.error("Session verification failed", err));
     }
 
-    fetch(`${API_BASE_URL}/users/${user.id}/checkins`)
+    fetch(`${API_BASE_URL}/users/${usr.id}/checkins`)
       .then(res => res.json())
       .then(data => {
         setCheckins(data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [user, navigate, updateAuthUser]);
+  }, [navigate]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +87,8 @@ export default function Dashboard() {
       });
       if (!res.ok) throw new Error("Failed to update profile");
       const updatedUser = await res.json();
-      updateAuthUser(updatedUser);
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Profile updated successfully!");
     } catch (err: any) {
       toast.error(err.message);

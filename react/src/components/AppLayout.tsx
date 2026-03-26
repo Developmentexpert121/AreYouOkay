@@ -5,11 +5,11 @@ import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/api-config";
-import { useAuth } from "@/lib/auth-context";
 
 export function AppLayout() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const savedUser = localStorage.getItem("user");
+  const user = savedUser ? JSON.parse(savedUser) : null;
 
   return (
     <SidebarProvider>

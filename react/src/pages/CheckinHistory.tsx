@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Loader2, History, Filter, Calendar, Search, RotateCcw } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api-config";
-import { useAuth } from "@/lib/auth-context";
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -22,7 +21,6 @@ function getStatusBadge(status: string) {
 }
 
 export default function CheckinHistory() {
-  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -32,7 +30,9 @@ export default function CheckinHistory() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        if (!user) return;
+        const savedUser = localStorage.getItem("user");
+        if (!savedUser) return;
+        const user = JSON.parse(savedUser);
 
         const res = await fetch(`${API_BASE_URL}/users/${user.id}/checkins`);
         if (res.ok) {
@@ -56,7 +56,7 @@ export default function CheckinHistory() {
       }
     };
     fetchHistory();
-  }, [user]);
+  }, []);
 
   const filtered = historyData.filter((item) => {
     if (statusFilter !== "all" && item.status !== statusFilter) return false;
