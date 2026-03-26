@@ -6,26 +6,49 @@ export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    try {
-      const hash = window.location.hash;
-      if (hash && hash.startsWith("#data=")) {
-        const b64 = hash.replace("#data=", "");
-        const jsonStr = atob(b64);
-        const user = JSON.parse(jsonStr);
+    const handleCallback = async () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get("token");
         
-        localStorage.setItem("user", JSON.stringify(user));
-        toast.success("Successfully authenticated with Google!");
-        
-        // Handle checkout redirect if we know they wanted to checkout
-        // For simplicity we just go to dashboard on oauth connect
-        navigate("/dashboard");
-      } else {
-        throw new Error("No authentication data found in URL.");
+        if (token) {
+          const res = await fetch(`${API_BASE_URL}/users/exchange-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token })
+          });
+          
+          if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.detail || "Token exchange failed");
+          }
+          
+          const user = await res.json();
+          localStorage.setItem("user", JSON.stringify(user));
+          toast.success("Successfully authenticated with Google!");
+          navigate("/dashboard");
+        } else {
+          // Fallback to old hash behavior just in case
+          const hash = window.location.hash;
+          if (hash && hash.startsWith("#data=")) {
+            const b64 = hash.replace("#data=", "");
+            const jsonStr = atob(b64);
+            const user = JSON.parse(jsonStr);
+            localStorage.setItem("user", JSON.stringify(user));
+            toast.success("Successfully authenticated with Google!");
+            navigate("/dashboard");
+          } else {
+            throw new Error("No authentication data found in URL.");
+          }
+        }
+      } catch (err: any) {
+        console.error("Auth Callback Error:", err);
+        toast.error(err.message || "Failed to complete authentication.");
+        navigate("/login");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to parse authentication data.");
-      navigate("/login");
-    }
+    };
+
+    handleCallback();
   }, [navigate]);
 
   return (

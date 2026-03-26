@@ -178,7 +178,7 @@ async def login_google(request: Request):
 
 @router.get("/login/google/callback")
 async def login_google_callback(request: Request, db: Session = Depends(database.get_db)):
-    frontend_url = os.environ.get("APP_FRONTEND_URL", "http://localhost:8080")
+    frontend_url = os.environ.get("APP_FRONTEND_URL", "http://localhost:8080").rstrip("/")
     try:
         token = await oauth.google.authorize_access_token(request)
         user_info = token.get('userinfo')
@@ -218,14 +218,54 @@ async def login_google_callback(request: Request, db: Session = Depends(database
             "timezone": user.timezone,
             "check_in_time": str(user.check_in_time) if user.check_in_time else None
         }
-        user_json = json.dumps(user_dict)
-        user_b64 = base64.b64encode(user_json.encode('utf-8')).decode('utf-8')
+        # Use reset_token as a temporary login token to avoid large base64 strings in URL
+        temp_token = str(uuid.uuid4())
+        user.reset_token = temp_token
+        # Token expires in 5 minutes
+        user.reset_token_expires = datetime.utcnow() + timedelta(minutes=5)
+        db.commit()
         
-        return RedirectResponse(url=f"{frontend_url}/auth/callback#data={user_b64}")
+        return RedirectResponse(url=f"{frontend_url}/auth/callback?token={temp_token}")
         
     except Exception as e:
         print(f"[OAuth Error]: {e}")
         return RedirectResponse(url=f"{frontend_url}/login?error=Google_Auth_Failed")
+
+@router.post("/exchange-token")
+async def exchange_token(payload: dict, db: Session = Depends(database.get_db)):
+    token = payload.get("token")
+    if not token:
+        raise HTTPException(status_code=400, detail="Token required")
+    
+    user = db.query(models.User).filter(
+        models.User.reset_token == token,
+        models.User.reset_token_expires > datetime.utcnow()
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    
+    user_dict = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "phone_number": getattr(user, "phone_number", ""),
+        "emergency_contact_name": getattr(user, "emergency_contact_name", ""),
+        "emergency_contact_phone": getattr(user, "emergency_contact_phone", ""),
+        "emergency_contact_name_2": getattr(user, "emergency_contact_name_2", ""),
+        "emergency_contact_phone_2": getattr(user, "emergency_contact_phone_2", ""),
+        "subscription_status": user.subscription_status,
+        "profile_picture": user.profile_picture,
+        "timezone": user.timezone,
+        "check_in_time": str(user.check_in_time) if user.check_in_time else None
+    }
+    
+    # Clear the token after use
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+    
+    return user_dict
 
 
 @router.get("/", response_model=list[schemas.UserResponse])
