@@ -27,7 +27,7 @@ export default function AuthCallback() {
           const user = await res.json();
           localStorage.setItem("user", JSON.stringify(user));
           toast.success("Successfully authenticated with Google!");
-          navigate("/dashboard");
+          window.location.href = "/dashboard";
         } else {
           // Fallback to old hash behavior just in case
           const hash = window.location.hash;
@@ -37,7 +37,7 @@ export default function AuthCallback() {
             const user = JSON.parse(jsonStr);
             localStorage.setItem("user", JSON.stringify(user));
             toast.success("Successfully authenticated with Google!");
-            navigate("/dashboard");
+            window.location.href = "/dashboard";
           } else {
             throw new Error("No authentication data found in URL.");
           }

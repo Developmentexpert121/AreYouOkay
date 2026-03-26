@@ -748,11 +748,11 @@ export default function Index() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32 mb-20">
             {/* Column 1: Brand & Identity */}
             <div className="space-y-8">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl rotate-3">
-                  <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl rotate-3">
+                  <img src="/logo.png" alt="Logo" className="w-11 h-11 object-contain" />
                 </div>
-                <span className="text-white font-black text-2xl tracking-tighter uppercase">
+                <span className="text-white font-black text-3xl tracking-tighter uppercase">
                   r u good?
                 </span>
               </div>
