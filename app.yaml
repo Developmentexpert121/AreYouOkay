@@ -1,0 +1,33 @@
+# DigitalOcean App Spec for areyouokay
+# This configuration fixes the 404 error on refresh for the React SPA.
+# The key setting is 'error_document: index.html' in the static_sites component.
+
+name: areyouokay
+region: nyc # Or your preferred region
+services:
+- name: areyouokay-api
+  source_dir: python
+  http_port: 8080
+  build_command: pip install -r requirements.txt
+  run_command: uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}
+  # Environment variables should be managed in the DigitalOcean dashboard for security.
+  # But listed here for completeness of the component structure.
+  envs:
+  - key: DATABASE_URL
+    scope: RUN_AND_BUILD_TIME
+    value: sqlite:///./safe_check.db # Default, update in dashboard if using Managed DB
+  - key: PORT
+    scope: RUN_AND_BUILD_TIME
+    value: "8080"
+  routes:
+  - path: /api
+static_sites:
+- name: areyouokay-react
+  source_dir: react
+  build_command: npm run build
+  output_dir: dist
+  # THIS IS THE CRITICAL FIX:
+  # It tells DigitalOcean to serve index.html for any request that doesn't match a file.
+  error_document: index.html 
+  routes:
+  - path: /

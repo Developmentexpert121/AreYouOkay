@@ -37,7 +37,7 @@ export default function Subscription() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}&origin=${encodeURIComponent(window.location.origin)}`, {
         method: "POST"
       });
       const data = await res.json();
@@ -50,8 +50,38 @@ export default function Subscription() {
   };
 
   useEffect(() => {
-    if (user && !isSubscribed) {
-      const searchParams = new URLSearchParams(window.location.search);
+    const searchParams = new URLSearchParams(window.location.search);
+    const sessionId = searchParams.get("session_id");
+
+    if (sessionId) {
+      const verifySession = async () => {
+        setLoading(true);
+        try {
+          const res = await fetch(`${API_BASE_URL}/stripe/verify-session?session_id=${sessionId}`);
+          const data = await res.json();
+          if (data.status === "success") {
+            const updatedUser = { ...user, ...data.user };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            toast.success("Subscription activated! Redirecting to dashboard...");
+            setTimeout(() => navigate("/dashboard"), 1500);
+          } else {
+            toast.error("Payment verification pending or failed.");
+          }
+        } catch (err) {
+          console.error("Verification error:", err);
+          toast.error("Failed to verify subscription status.");
+        } finally {
+          setLoading(false);
+          // Clear query params
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      
+      if (user) {
+        verifySession();
+      }
+    } else if (user && !isSubscribed) {
       if (searchParams.get("checkout") === "true") {
         window.history.replaceState({}, document.title, window.location.pathname);
         handleSubscribe();

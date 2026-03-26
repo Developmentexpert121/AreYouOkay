@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
+from typing import Optional
 import stripe
 import os
 from dotenv import load_dotenv
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/stripe", tags=["stripe"])
 
 
 @router.post("/create-checkout-session")
-async def create_checkout_session(user_id: int, db: Session = Depends(database.get_db)):
+async def create_checkout_session(user_id: int, request: Request, origin: Optional[str] = None, db: Session = Depends(database.get_db)):
     if not stripe.api_key:
         raise HTTPException(status_code=500, detail="Stripe API key not configured")
 
@@ -35,6 +36,14 @@ async def create_checkout_session(user_id: int, db: Session = Depends(database.g
             user.stripe_customer_id = customer.id
             db.commit()
 
+        # Build the base URL
+        if origin:
+            base_url = origin.rstrip('/')
+        else:
+            scheme = request.url.scheme
+            host = request.headers.get("host")
+            base_url = f"{scheme}://{host}"
+
         checkout_session = stripe.checkout.Session.create(
             customer=user.stripe_customer_id,
             payment_method_types=['card'],
@@ -45,7 +54,7 @@ async def create_checkout_session(user_id: int, db: Session = Depends(database.g
                         'product_data': {
                             'name': 'r u good? - Monthly Subscription',
                         },
-                        'unit_amount':643,  # $20 USD
+                        'unit_amount': 699,  # $6.99 USD
                         'recurring': {
                             'interval': 'month',
                         },
@@ -54,12 +63,13 @@ async def create_checkout_session(user_id: int, db: Session = Depends(database.g
                 },
             ],
             mode='subscription',
-            success_url='http://localhost:8080/dashboard?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://localhost:8080/subscription',
+            success_url=f'{base_url}/subscription?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{base_url}/subscription',
             client_reference_id=str(user_id)
         )
         return {"id": checkout_session.id, "url": checkout_session.url}
     except Exception as e:
+        print(f"[Stripe] Checkout error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 

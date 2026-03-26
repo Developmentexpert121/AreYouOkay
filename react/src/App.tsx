@@ -28,17 +28,26 @@ const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: Rea
     localStorage.removeItem("user");
   }
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
+  const isSubscribed = user?.subscription_status === "active";
 
   if (!user) {
       return <Navigate to="/login" replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
-      return <Navigate to="/dashboard" replace />;
+  // Admin bypass
+  if (isAdmin) {
+      if (requireUser) return <Navigate to="/admin" replace />;
+      return <>{children}</>;
   }
 
-  if (requireUser && isAdmin) {
-      return <Navigate to="/admin" replace />;
+  // Subscription check for regular users
+  const isOnSubscriptionPage = window.location.pathname === "/subscription";
+  if (!isSubscribed && !isOnSubscriptionPage) {
+      return <Navigate to="/subscription" replace />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+      return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -46,11 +55,20 @@ const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: Rea
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const savedUser = localStorage.getItem("user");
-  const user = savedUser ? JSON.parse(savedUser) : null;
+  let user = null;
+  try {
+    user = savedUser ? JSON.parse(savedUser) : null;
+  } catch (e) {
+    user = null;
+  }
+  
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
+  const isSubscribed = user?.subscription_status === "active";
 
   if (user) {
-      return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
+      if (isAdmin) return <Navigate to="/admin" replace />;
+      if (isSubscribed) return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/subscription" replace />;
   }
   return <>{children}</>;
 };

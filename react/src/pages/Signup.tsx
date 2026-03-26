@@ -89,10 +89,14 @@ export default function Signup() {
       const searchParams = new URLSearchParams(window.location.search);
       const redirect = searchParams.get("redirect");
       
-      if (redirect === "checkout") {
-        navigate("/subscription?checkout=true");
+      if (user.subscription_status === "active") {
+        if (redirect === "checkout") {
+          navigate("/subscription?checkout=true");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
-        navigate("/dashboard");
+        navigate("/subscription");
       }
     } catch (err: any) {
       setErrors({ general: err.message });

@@ -42,6 +42,8 @@ export function AppSidebar() {
   const savedUser = localStorage.getItem("user");
   const user = savedUser ? JSON.parse(savedUser) : null;
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
+  const isSubscribed = user?.subscription_status === "active";
+
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -80,33 +82,40 @@ export function AppSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
-                  {mainItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive(item.url)}
-                        className={`h-11 rounded-xl px-4 transition-all hover:bg-white/10 hover:text-white ${isActive(item.url)
-                          ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.3)]"
-                          : "text-gray-300"
+                  {mainItems.map((item) => {
+                    const isRestricted = !isSubscribed && !isAdmin && (item.url === "/dashboard" || item.url === "/history");
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive(item.url)}
+                          disabled={isRestricted}
+                          className={`h-11 rounded-xl px-4 transition-all ${isRestricted 
+                            ? "opacity-50 grayscale pointer-events-none cursor-not-allowed" 
+                            : "hover:bg-white/10 hover:text-white"
+                          } ${isActive(item.url)
+                            ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+                            : "text-gray-300"
                           }`}
-                      >
-                        <NavLink
-                          to={item.url}
-                          end
-                          className="flex w-full items-center gap-3 font-medium"
-                          activeClassName="!bg-gradient-to-r !from-blue-500/20 !to-purple-500/20 !text-white !border !border-blue-500/30"
                         >
-                          <item.icon
-                            className={`h-5 w-5 ${isActive(item.url)
-                              ? "text-blue-400"
-                              : "text-gray-400 group-hover:text-white"
-                              }`}
-                          />
-                          {!collapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                          <NavLink
+                            to={isRestricted ? "#" : item.url}
+                            end
+                            className="flex w-full items-center gap-3 font-medium"
+                            activeClassName="!bg-gradient-to-r !from-blue-500/20 !to-purple-500/20 !text-white !border !border-blue-500/30"
+                          >
+                            <item.icon
+                              className={`h-5 w-5 ${isActive(item.url)
+                                ? "text-blue-400"
+                                : "text-gray-400 group-hover:text-white"
+                                }`}
+                            />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

@@ -66,10 +66,14 @@ export default function Login() {
 
       if (user.email === "developmentexpert121@gmail.com") {
         navigate("/admin");
-      } else if (redirect === "checkout") {
-        navigate("/subscription?checkout=true");
+      } else if (user.subscription_status === "active") {
+        if (redirect === "checkout") {
+          navigate("/subscription?checkout=true");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
-        navigate("/dashboard");
+        navigate("/subscription");
       }
     } catch (err: any) {
       setErrors({ general: err.message });
