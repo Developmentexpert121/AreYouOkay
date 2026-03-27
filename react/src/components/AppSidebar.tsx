@@ -64,7 +64,7 @@ export function AppSidebar() {
             transition={{ duration: 0.3 }}
             className="flex items-center justify-center flex-shrink-0"
           >
-            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
+            <img src="/final logo.png" alt="Logo" className="w-20 h-20 object-contain" />
           </motion.div>
         </div>
 

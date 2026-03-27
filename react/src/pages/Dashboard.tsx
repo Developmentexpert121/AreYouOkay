@@ -155,9 +155,7 @@ export default function Dashboard() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <Brain className="w-5 h-5 text-white" />
-                </div>
+                <img src="/final logo.png" alt="Logo" className="w-10 h-10 object-contain" />
                 <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   r u good?<span className="text-white"></span>
                 </span>

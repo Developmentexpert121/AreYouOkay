@@ -141,7 +141,7 @@ export default function Index() {
               transition={{ duration: 0.3 }}
               className="flex items-center justify-center"
             >
-              <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
+              <img src="/final logo.png" alt="Logo" className="w-20 h-20 object-contain" />
             </motion.div>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
@@ -375,7 +375,7 @@ export default function Index() {
                         transition={{ duration: 0.3 }}
                         className="flex items-center justify-center mb-4"
                       >
-                        <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
+                        <img src="/final logo.png" alt="Logo" className="w-20 h-20 object-contain" />
                       </motion.div>
                       <p className="text-gray-400 text-[10px] font-semibold tracking-widest uppercase mb-1">
                         r u good?
@@ -747,7 +747,7 @@ export default function Index() {
             <div className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center rotate-3">
-                  <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
+                  <img src="/final logo.png" alt="Logo" className="w-20 h-20 object-contain" />
                 </div>
               </div>
 
