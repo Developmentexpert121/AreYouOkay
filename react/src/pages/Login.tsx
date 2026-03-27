@@ -126,17 +126,14 @@ export default function Login() {
         {/* Left Side: Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative">
           {/* Branding */}
-          <div className="flex items-center justify-center gap-3 mb-10">
+          <div className="flex flex-col items-center gap-6 mb-8 text-center w-full">
             <motion.div
               whileHover={{ rotate: 10, scale: 1.1 }}
               transition={{ duration: 0.3 }}
-              className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-xl"
+              className="flex items-center justify-center p-0"
             >
-              <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+              <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
             </motion.div>
-            <span className="text-3xl font-extrabold text-white tracking-tight">
-              r u good?
-            </span>
           </div>
 
           <div className="text-center mb-8">

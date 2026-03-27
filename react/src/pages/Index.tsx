@@ -139,13 +139,10 @@ export default function Index() {
             <motion.div
               whileHover={{ rotate: 10, scale: 1.1 }}
               transition={{ duration: 0.3 }}
-              className="w-11 h-11 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shadow-lg"
+              className="flex items-center justify-center"
             >
-              <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+              <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
             </motion.div>
-            <span className="text-xl font-bold tracking-tight text-white">
-              r u good?
-            </span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
             <a href="#features" className="hover:text-blue-400 transition-colors">Features</a>
@@ -376,9 +373,9 @@ export default function Index() {
                       <motion.div
                         whileHover={{ rotate: 10, scale: 1.1 }}
                         transition={{ duration: 0.3 }}
-                        className="w-20 h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-4 shadow-2xl"
+                        className="flex items-center justify-center mb-4"
                       >
-                        <img src="/logo.png" alt="Logo" className="w-14 h-14 object-contain" />
+                        <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
                       </motion.div>
                       <p className="text-gray-400 text-[10px] font-semibold tracking-widest uppercase mb-1">
                         r u good?
@@ -749,12 +746,9 @@ export default function Index() {
             {/* Column 1: Brand & Identity */}
             <div className="space-y-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl rotate-3">
-                  <img src="/logo.png" alt="Logo" className="w-11 h-11 object-contain" />
+                <div className="flex items-center justify-center rotate-3">
+                  <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
                 </div>
-                <span className="text-white font-black text-3xl tracking-tighter uppercase">
-                  r u good?
-                </span>
               </div>
 
               <p className="text-gray-400 text-lg leading-relaxed max-w-md font-medium">
