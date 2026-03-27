@@ -63,7 +63,11 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
                     _send_sms(client, str(user.phone_number).replace(" ", ""), "🥳")
 
                 # If the check-in was already escalated, send a False Alarm notice to emergency contact
-                escalated_statuses = {"escalated_1_sms", "escalated_1_voice", "escalated_2_sms", "escalated_2_voice"}
+                escalated_statuses = {
+                    "escalated_1_sms", "escalated_1_voice", 
+                    "escalated_2_sms", "escalated_2_voice",
+                    "escalated_3_sms", "escalated_3_voice"
+                }
                 if previous_status in escalated_statuses and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
                     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
                     msg = (
@@ -72,16 +76,16 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
                     )
                     for contact in [
                         (user.emergency_contact_phone, user.emergency_contact_name),
-                        (user.emergency_contact_phone_2, user.emergency_contact_name_2)
+                        (user.emergency_contact_phone_2, user.emergency_contact_name_2),
+                        (user.emergency_contact_phone_3, user.emergency_contact_name_3)
                     ]:
                         if contact[0]:
-                            _send_sms(client, contact[0].replace(" ", ""), msg)
+                            _send_sms(client, str(contact[0]).replace(" ", ""), msg)
                             _log_alert(db, user.id, checkin.id, "false_alarm_resolution", contact[1] or "Contact", contact[0], msg, True)
 
             elif body in ("NO", "N"):
                 # Accelerate them immediately to the start of the escalation funnel
-                checkin.status = "reminded" # setting reminded triggers the escalation on next scheduler tick
-                # But to meet prompt requirement: "If you type no, we will contact your primary contact person immediately."
+                # Prompt requirement: "If you type no, we will contact your primary contact person immediately."
                 checkin.status = "escalated_1_sms"
                 checkin.scheduled_for = datetime.utcnow() - timedelta(minutes=1000) # Ensure it passes the elapsed minutes checks
                 
@@ -117,7 +121,7 @@ async def twilio_voice_emergency(request: Request):
     response = VoiceResponse()
     gather = response.gather(
         num_digits=1,
-        action=f"/webhook/twilio/gather/emergency?user_id={user_id}&checkin_id={checkin_id}",
+        action=f"gather/emergency?user_id={user_id}&checkin_id={checkin_id}",
         method="POST",
         timeout=10
     )
@@ -198,7 +202,7 @@ async def twilio_voice(request: Request):
     # but Twilio supports relative URLs if they hit this endpoint directly.
     gather = response.gather(
         num_digits=1,
-        action=f"/webhook/twilio/gather?user_id={user_id}&checkin_id={checkin_id}",
+        action=f"gather?user_id={user_id}&checkin_id={checkin_id}",
         method="POST",
         timeout=10
     )

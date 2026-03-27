@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { useLocation, BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,9 +16,11 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: React.ReactNode, requireAdmin?: boolean, requireUser?: boolean }) => {
+  const location = useLocation();
   const savedUser = localStorage.getItem("user");
   let user = null;
   try {
@@ -27,27 +29,30 @@ const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: Rea
     console.error("Failed to parse user from localStorage", e);
     localStorage.removeItem("user");
   }
+  
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 
   if (!user) {
-      return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Admin bypass
   if (isAdmin) {
-      if (requireUser) return <Navigate to="/admin" replace />;
-      return <>{children}</>;
+    if (requireUser && location.pathname !== "/admin") {
+      return <Navigate to="/admin" replace />;
+    }
+    return <>{children}</>;
   }
 
   // Subscription check for regular users
-  const isOnSubscriptionPage = window.location.pathname === "/subscription";
+  const isOnSubscriptionPage = location.pathname === "/subscription";
   if (!isSubscribed && !isOnSubscriptionPage) {
-      return <Navigate to="/subscription" replace />;
+    return <Navigate to="/subscription" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-      return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -66,9 +71,9 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const isSubscribed = user?.subscription_status === "active";
 
   if (user) {
-      if (isAdmin) return <Navigate to="/admin" replace />;
-      if (isSubscribed) return <Navigate to="/dashboard" replace />;
-      return <Navigate to="/subscription" replace />;
+    if (isAdmin) return <Navigate to="/admin" replace />;
+    if (isSubscribed) return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/subscription" replace />;
   }
   return <>{children}</>;
 };
@@ -87,11 +92,11 @@ const App = () => (
           <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
           <Route path="/reset-password" element={<AuthRoute><ResetPassword /></AuthRoute>} />
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            <Route path="/dashboard" element={<ProtectedRoute requireUser><Dashboard /></ProtectedRoute>} />
-            <Route path="/history" element={<ProtectedRoute requireUser><CheckinHistory /></ProtectedRoute>} />
-            <Route path="/subscription" element={<ProtectedRoute requireUser><Subscription /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/history" element={<CheckinHistory />} />
+            <Route path="/subscription" element={<Subscription />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

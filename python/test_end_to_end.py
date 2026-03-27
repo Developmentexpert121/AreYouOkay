@@ -20,7 +20,8 @@ import models
 # 1. Mock the twilio functions so we don't spam real numbers
 def mock_get_twilio_client():
     class DummyClient:
-        pass
+        def __init__(self):
+            self.calls = MockCalls()
     return DummyClient()
 
 def mock_send_sms(client, to, body):
@@ -57,6 +58,8 @@ scheduler.escalate_voice_to_contact = mock_escalate_voice_to_contact
 
 
 def test_end_to_end():
+    from database import engine, Base
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     
     # Setup test user
@@ -76,18 +79,29 @@ def test_end_to_end():
             emergency_contact_phone_3="+33333333333",
             subscription_status="active",
             reminder_delay_minutes=360,     # 6 hours
-            escalation_delay_minutes=30     # 0.5 hours before first alert
+            escalation_delay_minutes=120    # 2 hours before first alert
         )
         db.add(user)
         db.commit()
         db.refresh(user)
 
+    # Cleanup previous runs
+    db.query(models.CheckInTrack).filter_by(user_id=user.id).delete()
+    db.commit()
+
     print("\n--- TEST PHASE 1: INITIAL CHECK-IN CREATION ---")
     # Simulate current time matching the user's check_in_time
-    now = datetime.utcnow()
-    # Temporarily set user's check-in time to right now
-    user.check_in_time = now.strftime("%H:%M")
+    # Use a fixed baseline now so we can reason about offsets
+    now = datetime(2026, 3, 27, 9, 0)
+    user.check_in_time = "09:00"
     db.commit()
+    
+    class MockDatetimeNow(datetime):
+        @classmethod
+        def utcnow(cls):
+            return now
+    
+    scheduler.datetime = MockDatetimeNow
     
     scheduler.check_and_send_messages()
     
@@ -115,16 +129,19 @@ def test_end_to_end():
     
     time_lapses = [
         (359, "Before Reminder window"),
-        (360, "Exactly at Reminder window (6h)"),
-        (389, "Before Contact 1 window"),
-        (390, "Exactly at Contact 1 window (6.5h)"),
-        (390 + 15, "Contact 1 Voice Call (6.75h)"),
-        (390 + 15 + 119, "Before Contact 2 window"),
-        (390 + 15 + 120, "Contact 2 SMS window (8.75h)"),
-        (390 + 30 + 120, "Contact 2 Voice window"),
-        (390 + 15 + 240, "Contact 3 SMS window"),
-        (390 + 30 + 240, "Contact 3 Voice window"),
-        (390 + 30 + 300, "End of Line -> Missed")
+        (360, "Exactly at Reminder window (T+6h)"),
+        (419, "Before User Voice window"),
+        (420, "Exactly at User Voice window (T+7h)"),
+        (479, "Before Contact 1 window"),
+        (480, "Exactly at Contact 1 window (T+8h)"),
+        (495, "Contact 1 Voice Call (T+8.25h)"),
+        (599, "Before Contact 2 window"),
+        (600, "Contact 2 SMS window (T+10h)"),
+        (615, "Contact 2 Voice window"),
+        (719, "Before Contact 3 window"),
+        (720, "Contact 3 SMS window (T+12h)"),
+        (735, "Contact 3 Voice window"),
+        (840, "End of Line -> Missed (T+14h)")
     ]
     
     for minutes_advanced, desc in time_lapses:
