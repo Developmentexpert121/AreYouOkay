@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const features = [
-  "Unlimited automated check-ins",
-  "Instant SMS & Email escalation",
-  "Multi-contact emergency routing",
-  "Detailed daily AI activity logs",
-  "Priority 24/7 technical support",
+  "Daily automated safety check-ins",
+  "Instant SMS & Voice Call escalation",
+  "Triple emergency contact routing",
+  "AI sentiment & safety analysis",
+  "24/7 automated AI monitoring",
 ];
 
 export default function Subscription() {
@@ -166,9 +166,7 @@ export default function Subscription() {
                 You're fully protected.
               </h2>
 
-              <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-                Your automated safety engine is active. You have access to unlimited check-ins, instant voice call escalation, and multi-contact routing.
-              </p>
+                Your automated safety engine is active. You have access to daily automated check-ins, instant SMS & Voice Call escalation, and triple contact routing.
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/10">
                 {features.map((feature, idx) => (
@@ -297,6 +295,12 @@ export default function Subscription() {
                         {feature}
                       </li>
                     ))}
+                    <li className="flex items-center gap-4 text-sm font-medium text-gray-300">
+                      <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 border border-blue-500/30 shadow-sm">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                      Cancel anytime
+                    </li>
                   </ul>
                 </div>
 

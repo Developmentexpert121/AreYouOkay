@@ -748,11 +748,11 @@ export default function Index() {
 
               <ul className="text-left space-y-3 mb-8">
                 {[
-                  "Daily SMS check-ins at your preferred time",
-                  "Emergency contact alerts (NO reply & missed)",
-                  "Two-step reminder escalation",
-                  "Multi-timezone support",
-                  "Check-in history & admin dashboard",
+                  "Daily automated safety check-ins",
+                  "Instant SMS & Voice Call escalation",
+                  "Triple emergency contact routing",
+                  "AI sentiment & safety analysis",
+                  "24/7 automated AI monitoring",
                   "Cancel anytime",
                 ].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
