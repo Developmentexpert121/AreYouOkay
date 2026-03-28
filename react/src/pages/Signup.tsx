@@ -79,8 +79,14 @@ export default function Signup() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Registration failed");
+        let errMsg = "Registration failed";
+        try {
+          const errData = await res.json();
+          errMsg = errData.detail || errMsg;
+        } catch {
+          errMsg = (await res.text().catch(() => errMsg)) || errMsg;
+        }
+        throw new Error(errMsg);
       }
       const data = await res.json();
 

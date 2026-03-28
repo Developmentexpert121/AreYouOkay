@@ -182,30 +182,40 @@ def send_verification_email(to_email: str, code: str):
 
 @router.post("/")
 def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    try:
+        db_user = db.query(models.User).filter(models.User.email == user.email).first()
+        if db_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    user_data = user.dict()
-    password = user_data.pop("password")
-    user_data["hashed_password"] = hash_password(password)
-    user_data["email_verified"] = False
+        # Only pass fields that exist on models.User
+        hashed_pw = hash_password(user.password)
+        otp_code = str(random.randint(100000, 999999))
+        otp_expiry = datetime.utcnow() + timedelta(minutes=30)
 
-    # Generate 6-digit OTP
-    otp_code = str(random.randint(100000, 999999))
-    user_data["email_verification_token"] = otp_code
-    user_data["email_verification_expires"] = datetime.utcnow() + timedelta(minutes=30)
+        new_user = models.User(
+            name=user.name,
+            email=user.email,
+            hashed_password=hashed_pw,
+            email_verified=False,
+            email_verification_token=otp_code,
+            email_verification_expires=otp_expiry,
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    new_user = models.User(**user_data)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+        # Send verification email (also prints code to console as fallback)
+        print(f"[EMAIL VERIFY] OTP for {user.email}: {otp_code}")
+        send_verification_email(user.email, otp_code)
 
-    # Send verification email (also prints code to console as fallback)
-    print(f"[EMAIL VERIFY] OTP for {user.email}: {otp_code}")
-    send_verification_email(user.email, otp_code)
+        return {"message": "verification_required", "email": user.email}
 
-    return {"message": "verification_required", "email": user.email}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 
 @router.post("/forgot-password")
