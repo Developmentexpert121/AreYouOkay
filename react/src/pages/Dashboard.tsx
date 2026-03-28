@@ -14,6 +14,17 @@ const timezones = [
   "Europe/London", "Europe/Paris", "Asia/Tokyo", "Asia/Dubai", "Australia/Sydney"
 ];
 
+const countryCodes = [
+  { code: "+1", label: "US (+1)" },
+  { code: "+91", label: "IN (+91)" },
+  { code: "+44", label: "UK (+44)" },
+  { code: "+61", label: "AU (+61)" },
+  { code: "+971", label: "AE (+971)" },
+  { code: "+81", label: "JP (+81)" },
+  { code: "+33", label: "FR (+33)" },
+  { code: "+49", label: "DE (+49)" },
+];
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -23,12 +34,15 @@ export default function Dashboard() {
 
   const [profileForm, setProfileForm] = useState({
     phone_number: "",
+    phone_code: "+1",
     timezone: "UTC",
     check_in_time: "09:00",
     emergency_contact_name: "",
     emergency_contact_phone: "",
+    emergency_contact_phone_code: "+1",
     emergency_contact_name_2: "",
-    emergency_contact_phone_2: ""
+    emergency_contact_phone_2: "",
+    emergency_contact_phone_code_2: "+1"
   });
 
   useEffect(() => {
@@ -39,14 +53,29 @@ export default function Dashboard() {
     }
     const usr = JSON.parse(savedUser);
     setUser(usr);
+
+    const parsePhone = (fullPhone: string) => {
+      if (!fullPhone) return { code: "+1", num: "" };
+      const match = fullPhone.match(/^(\+\d+)\s*(.*)$/);
+      if (match) return { code: match[1], num: match[2] };
+      return { code: "+1", num: fullPhone };
+    };
+
+    const p1 = parsePhone(usr.phone_number);
+    const p2 = parsePhone(usr.emergency_contact_phone);
+    const p3 = parsePhone(usr.emergency_contact_phone_2);
+
     setProfileForm({
-      phone_number: usr.phone_number || "",
+      phone_number: p1.num,
+      phone_code: p1.code,
       timezone: usr.timezone || "UTC",
       check_in_time: usr.check_in_time || "09:00",
       emergency_contact_name: usr.emergency_contact_name || "",
-      emergency_contact_phone: usr.emergency_contact_phone || "",
+      emergency_contact_phone: p2.num,
+      emergency_contact_phone_code: p2.code,
       emergency_contact_name_2: usr.emergency_contact_name_2 || "",
-      emergency_contact_phone_2: usr.emergency_contact_phone_2 || ""
+      emergency_contact_phone_2: p3.num,
+      emergency_contact_phone_code_2: p3.code
     });
 
     // Check for Stripe session success
@@ -78,12 +107,41 @@ export default function Dashboard() {
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation: 10 digits only
+    const validatePhone = (num: string) => {
+      const cleaned = num.replace(/\D/g, "");
+      return cleaned.length === 10;
+    };
+
+    if (!validatePhone(profileForm.phone_number)) {
+      toast.error("Your phone number must be exactly 10 digits");
+      return;
+    }
+    if (!validatePhone(profileForm.emergency_contact_phone)) {
+      toast.error("Emergency contact phone must be exactly 10 digits");
+      return;
+    }
+    if (profileForm.emergency_contact_phone_2 && !validatePhone(profileForm.emergency_contact_phone_2)) {
+      toast.error("Secondary contact phone must be exactly 10 digits");
+      return;
+    }
+
     setUpdatingProfile(true);
     try {
+      const payload = {
+        ...profileForm,
+        phone_number: `${profileForm.phone_code} ${profileForm.phone_number.replace(/\D/g, "")}`,
+        emergency_contact_phone: `${profileForm.emergency_contact_phone_code} ${profileForm.emergency_contact_phone.replace(/\D/g, "")}`,
+        emergency_contact_phone_2: profileForm.emergency_contact_phone_2 
+          ? `${profileForm.emergency_contact_phone_code_2} ${profileForm.emergency_contact_phone_2.replace(/\D/g, "")}` 
+          : ""
+      };
+
       const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileForm)
+        body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error("Failed to update profile");
       const updatedUser = await res.json();
@@ -169,14 +227,25 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Your Phone</label>
-                      <div className="relative">
-                        <Input
-                          placeholder="+1 (555) 000-0000"
-                          value={profileForm.phone_number}
-                          onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
-                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                        />
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <div className="flex gap-2">
+                        <Select value={profileForm.phone_code} onValueChange={(v) => setProfileForm({ ...profileForm, phone_code: v })}>
+                          <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                            {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder="555 000 0000"
+                            maxLength={10}
+                            value={profileForm.phone_number}
+                            onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                          />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -224,14 +293,25 @@ export default function Dashboard() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 1 — Phone</label>
-                        <div className="relative">
-                          <Input
-                            placeholder="+1 (555) 000-0000"
-                            value={profileForm.emergency_contact_phone}
-                            onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value })}
-                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                          />
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <div className="flex gap-2">
+                          <Select value={profileForm.emergency_contact_phone_code} onValueChange={(v) => setProfileForm({ ...profileForm, emergency_contact_phone_code: v })}>
+                            <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                              {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <div className="relative flex-1">
+                            <Input
+                              placeholder="555 000 0000"
+                              maxLength={10}
+                              value={profileForm.emergency_contact_phone}
+                              onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                              className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                            />
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -252,14 +332,25 @@ export default function Dashboard() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 2 — Phone <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
-                        <div className="relative">
-                          <Input
-                            placeholder="+1 (555) 000-0000"
-                            value={profileForm.emergency_contact_phone_2}
-                            onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone_2: e.target.value })}
-                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                          />
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <div className="flex gap-2">
+                          <Select value={profileForm.emergency_contact_phone_code_2} onValueChange={(v) => setProfileForm({ ...profileForm, emergency_contact_phone_code_2: v })}>
+                            <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                              {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <div className="relative flex-1">
+                            <Input
+                              placeholder="555 000 0000"
+                              maxLength={10}
+                              value={profileForm.emergency_contact_phone_2}
+                              onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone_2: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                              className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                            />
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          </div>
                         </div>
                       </div>
                     </div>
