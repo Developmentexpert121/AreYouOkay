@@ -64,7 +64,7 @@ def check_and_send_messages():
             local_time = now_utc.replace(tzinfo=pytz.utc).astimezone(tz)
             current_hm = local_time.strftime("%H:%M")
 
-            if current_hm == user.check_in_time:
+            if current_hm >= user.check_in_time:
                 today_start = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
                 existing = db.query(models.CheckInTrack).filter(
                     models.CheckInTrack.user_id == user.id,
@@ -83,8 +83,9 @@ def check_and_send_messages():
 
                     if client and user.phone_number:
                         body = f"Hi {user.name}, r u good? Type y for yes. Or N for no."
-                        ok = _send_sms(client, user.phone_number, body)
-                        _log_alert(db, user.id, new_checkin.id, "initial_checkin", user.name, user.phone_number, body, ok)
+                        phone_to_send = str(user.phone_number).replace(" ", "")
+                        ok = _send_sms(client, phone_to_send, body)
+                        _log_alert(db, user.id, new_checkin.id, "initial_checkin", user.name, phone_to_send, body, ok)
     except Exception as e:
         print(f"Scheduler check_and_send_messages error: {e}")
     finally:
@@ -167,8 +168,9 @@ def escalations_check():
 
                 if client and user.phone_number:
                     body = f"Hi {user.name}, r u good? Type y for yes. Or N for no."
-                    ok = _send_sms(client, user.phone_number, body)
-                    _log_alert(db, user.id, checkin.id, "reminder", user.name, user.phone_number, body, ok)
+                    phone_to_send = str(user.phone_number).replace(" ", "")
+                    ok = _send_sms(client, phone_to_send, body)
+                    _log_alert(db, user.id, checkin.id, "reminder", user.name, phone_to_send, body, ok)
 
             # --- T+Reminder Delay + 60 mins: Send voice call to user ---
             elif checkin.status == "reminded" and elapsed_mins >= reminder_delay + 60:
