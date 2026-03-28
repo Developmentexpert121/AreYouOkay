@@ -9,6 +9,16 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/api-config";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const API = API_BASE_URL;
 
@@ -43,6 +53,18 @@ export default function Admin() {
   const [missedCheckins, setMissedCheckins] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"users" | "alerts" | "missed">("users");
   const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    action: () => void;
+    destructive?: boolean;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    action: () => { },
+  });
 
   const fetchData = () => {
     Promise.all([
@@ -78,28 +100,42 @@ export default function Admin() {
 
   const handleSuspend = async (user: any) => {
     const action = user.status === "active" ? "suspend" : "unsuspend";
-    if (!window.confirm(`Are you sure you want to ${action} ${user.name}?`)) return;
-    try {
-      const res = await fetch(`${API}/users/${user.id}/suspend`, { method: "PUT" });
-      if (!res.ok) throw new Error("Failed");
-      toast.success(`User ${action}ed successfully`);
-      fetchData();
-    } catch {
-      toast.error(`Failed to ${action} user`);
-    }
+    setConfirmDialog({
+      open: true,
+      title: `${action.charAt(0).toUpperCase() + action.slice(1)} User?`,
+      description: `Are you sure you want to ${action} ${user.name}? This will affect their ability to receive check-ins.`,
+      action: async () => {
+        try {
+          const res = await fetch(`${API}/users/${user.id}/suspend`, { method: "PUT" });
+          if (!res.ok) throw new Error("Failed");
+          toast.success(`User ${action}ed successfully`);
+          fetchData();
+          if (selectedUser?.id === user.id) setSelectedUser({ ...selectedUser, status: user.status === "active" ? "inactive" : "active" });
+        } catch {
+          toast.error(`Failed to ${action} user`);
+        }
+      }
+    });
   };
 
   const handleDelete = async (user: any) => {
-    if (!window.confirm(`Permanently delete ${user.name}? This cannot be undone.`)) return;
-    try {
-      const res = await fetch(`${API}/users/${user.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed");
-      toast.success("User deleted successfully");
-      if (selectedUser?.id === user.id) setSelectedUser(null);
-      fetchData();
-    } catch {
-      toast.error("Failed to delete user");
-    }
+    setConfirmDialog({
+      open: true,
+      title: "Delete User Permanently?",
+      description: `Caution: This will permanently delete ${user.name} and all their history. This action cannot be undone.`,
+      destructive: true,
+      action: async () => {
+        try {
+          const res = await fetch(`${API}/users/${user.id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error("Failed");
+          toast.success("User deleted successfully");
+          if (selectedUser?.id === user.id) setSelectedUser(null);
+          fetchData();
+        } catch {
+          toast.error("Failed to delete user");
+        }
+      }
+    });
   };
 
   // User-specific alerts
@@ -400,6 +436,47 @@ export default function Admin() {
           </div>
         </motion.div>
       )}
+      {/* Global Confirmation Dialog */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(o) => setConfirmDialog(p => ({ ...p, open: o }))}>
+        <AlertDialogContent className="bg-[#0a0a0b] border border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden max-w-md shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none ${confirmDialog.destructive ? "bg-red-500/10" : "bg-blue-500/10"}`} />
+          
+          <div className="p-10 relative z-10">
+            <AlertDialogHeader className="space-y-4">
+              <AlertDialogTitle className="text-3xl font-extrabold flex items-center gap-4 tracking-tight">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border ${confirmDialog.destructive 
+                  ? "bg-red-500/10 text-red-500 border-red-500/20" 
+                  : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                {confirmDialog.title}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400 text-lg leading-relaxed pt-2 font-medium">
+                {confirmDialog.description}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <AlertDialogFooter className="mt-10 flex-col sm:flex-col gap-3">
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDialog.action();
+                  setConfirmDialog(p => ({ ...p, open: false }));
+                }}
+                className={`w-full h-14 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98] ${confirmDialog.destructive
+                  ? "bg-red-500 hover:bg-red-600 text-white shadow-red-500/20"
+                  : "bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 text-white shadow-blue-500/20"
+                  }`}
+              >
+                Confirm Action
+              </AlertDialogAction>
+              <AlertDialogCancel className="w-full h-14 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white font-bold text-lg border-0 transition-all">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -3,9 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { User, Shield, Upload, Trash2, Camera, Globe, Clock, Phone, Heart, Loader2, Brain } from "lucide-react";
+import { User, Shield, Upload, Trash2, Camera, Globe, Clock, Phone, Heart, Loader2, Brain, Lock } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api-config";
 import { useRef } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const countryCodes = [
+  { code: "+1", label: "US (+1)" },
+  { code: "+91", label: "IN (+91)" },
+  { code: "+44", label: "UK (+44)" },
+  { code: "+61", label: "AU (+61)" },
+  { code: "+971", label: "AE (+971)" },
+  { code: "+81", label: "JP (+81)" },
+  { code: "+33", label: "FR (+33)" },
+  { code: "+49", label: "DE (+49)" },
+];
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
@@ -16,12 +34,15 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     name: "",
     phone_number: "",
+    phone_code: "+1",
     timezone: "",
     check_in_time: "",
     emergency_contact_name: "",
     emergency_contact_phone: "",
+    emergency_contact_phone_code: "+1",
     emergency_contact_name_2: "",
     emergency_contact_phone_2: "",
+    emergency_contact_phone_code_2: "+1",
     reminder_delay_minutes: 30,
     escalation_delay_minutes: 60,
   });
@@ -31,15 +52,30 @@ export default function Profile() {
     if (savedUser) {
       const parsed = JSON.parse(savedUser);
       setUser(parsed);
+
+      const parsePhone = (fullPhone: string) => {
+        if (!fullPhone) return { code: "+1", num: "" };
+        const match = fullPhone.match(/^(\+\d+)\s*(.*)$/);
+        if (match) return { code: match[1], num: match[2] };
+        return { code: "+1", num: fullPhone };
+      };
+
+      const p1 = parsePhone(parsed.phone_number);
+      const p2 = parsePhone(parsed.emergency_contact_phone);
+      const p3 = parsePhone(parsed.emergency_contact_phone_2);
+
       setFormData({
         name: parsed.name || "",
-        phone_number: parsed.phone_number || "",
+        phone_number: p1.num,
+        phone_code: p1.code,
         timezone: parsed.timezone || "UTC",
         check_in_time: parsed.check_in_time || "09:00",
         emergency_contact_name: parsed.emergency_contact_name || "",
-        emergency_contact_phone: parsed.emergency_contact_phone || "",
+        emergency_contact_phone: p2.num,
+        emergency_contact_phone_code: p2.code,
         emergency_contact_name_2: parsed.emergency_contact_name_2 || "",
-        emergency_contact_phone_2: parsed.emergency_contact_phone_2 || "",
+        emergency_contact_phone_2: p3.num,
+        emergency_contact_phone_code_2: p3.code,
         reminder_delay_minutes: parsed.reminder_delay_minutes ?? 30,
         escalation_delay_minutes: parsed.escalation_delay_minutes ?? 60,
       });
@@ -52,13 +88,42 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation: 10 digits only
+    const validatePhone = (num: string) => {
+      const cleaned = num.replace(/\D/g, "");
+      return cleaned.length === 10;
+    };
+
+    if (!validatePhone(formData.phone_number)) {
+      toast.error("Your phone number must be exactly 10 digits");
+      return;
+    }
+    if (!validatePhone(formData.emergency_contact_phone)) {
+      toast.error("Emergency contact phone must be exactly 10 digits");
+      return;
+    }
+    if (formData.emergency_contact_phone_2 && !validatePhone(formData.emergency_contact_phone_2)) {
+      toast.error("Secondary contact phone must be exactly 10 digits");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const payload = {
+        ...formData,
+        phone_number: `${formData.phone_code} ${formData.phone_number.replace(/\D/g, "")}`,
+        emergency_contact_phone: `${formData.emergency_contact_phone_code} ${formData.emergency_contact_phone.replace(/\D/g, "")}`,
+        emergency_contact_phone_2: formData.emergency_contact_phone_2 
+          ? `${formData.emergency_contact_phone_code_2} ${formData.emergency_contact_phone_2.replace(/\D/g, "")}` 
+          : ""
+      };
+
       const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
@@ -258,9 +323,25 @@ export default function Profile() {
 
                   <div className="space-y-2">
                     <label htmlFor="phone_number" className="text-gray-400 font-bold text-xs uppercase tracking-wider">Phone Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input id="phone_number" value={formData.phone_number} onChange={handleChange} className="h-12 pl-11 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl" required />
+                    <div className="flex gap-2">
+                      <Select value={formData.phone_code} onValueChange={(v) => setFormData({ ...formData, phone_code: v })}>
+                        <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                          {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <div className="relative flex-1">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          id="phone_number"
+                          value={formData.phone_number}
+                          onChange={(e) => setFormData({ ...formData, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                          className="h-12 pl-11 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -306,7 +387,24 @@ export default function Profile() {
                     </div>
                     <div className="space-y-2">
                       <label htmlFor="emergency_contact_phone" className="text-gray-400 font-bold text-xs uppercase tracking-wider">Contact Direct Line</label>
-                      <Input id="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleChange} placeholder="+1234567890" className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl" required />
+                      <div className="flex gap-2">
+                        <Select value={formData.emergency_contact_phone_code} onValueChange={(v) => setFormData({ ...formData, emergency_contact_phone_code: v })}>
+                          <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                            {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          id="emergency_contact_phone"
+                          value={formData.emergency_contact_phone}
+                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                          placeholder="555 000 0000"
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -317,7 +415,23 @@ export default function Profile() {
                     </div>
                     <div className="space-y-2">
                       <label htmlFor="emergency_contact_phone_2" className="text-gray-400 font-bold text-xs uppercase tracking-wider">Second Contact Line</label>
-                      <Input id="emergency_contact_phone_2" value={formData.emergency_contact_phone_2} onChange={handleChange} placeholder="+1234567890" className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl" />
+                      <div className="flex gap-2">
+                        <Select value={formData.emergency_contact_phone_code_2} onValueChange={(v) => setFormData({ ...formData, emergency_contact_phone_code_2: v })}>
+                          <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                            {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          id="emergency_contact_phone_2"
+                          value={formData.emergency_contact_phone_2}
+                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone_2: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                          placeholder="555 000 0000"
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

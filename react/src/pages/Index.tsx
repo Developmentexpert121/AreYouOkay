@@ -126,7 +126,7 @@ export default function Index() {
       if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
       window.location.href = data.url;
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

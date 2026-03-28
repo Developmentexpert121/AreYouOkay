@@ -21,6 +21,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { motion } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -84,17 +90,18 @@ export function AppSidebar() {
                 Main Navigation
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="gap-1">
-                  {mainItems.map((item) => {
-                    const isRestricted = !isSubscribed && !isAdmin && (item.url === "/dashboard" || item.url === "/history");
-                    return (
-                      <SidebarMenuItem key={item.title}>
+                <TooltipProvider>
+                  <SidebarMenu className="gap-1">
+                    {mainItems.map((item) => {
+                      const isRestricted = !isSubscribed && !isAdmin && (item.url === "/dashboard" || item.url === "/history");
+                      
+                      const menuButton = (
                         <SidebarMenuButton
                           asChild
                           isActive={isActive(item.url)}
                           disabled={isRestricted}
                           className={`h-11 rounded-xl px-4 transition-all ${isRestricted
-                            ? "opacity-50 grayscale pointer-events-none cursor-not-allowed"
+                            ? "opacity-50 grayscale cursor-not-allowed" // Removed pointer-events-none to allow tooltip
                             : "hover:bg-white/10 hover:text-white"
                             } ${isActive(item.url)
                               ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.3)]"
@@ -106,6 +113,7 @@ export function AppSidebar() {
                             end
                             className="flex w-full items-center gap-3 font-medium"
                             activeClassName="!bg-gradient-to-r !from-blue-500/20 !to-purple-500/20 !text-white !border !border-blue-500/30"
+                            onClick={isRestricted ? (e) => e.preventDefault() : undefined}
                           >
                             <item.icon
                               className={`h-5 w-5 flex-shrink-0 ${isActive(item.url)
@@ -121,10 +129,34 @@ export function AppSidebar() {
                             )}
                           </NavLink>
                         </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
+                      );
+
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          {isRestricted ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                {menuButton}
+                              </TooltipTrigger>
+                              <TooltipContent 
+                                side="top" 
+                                sideOffset={8}
+                                className="bg-black/90 backdrop-blur-xl border-blue-500/20 text-white font-medium px-4 py-2 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.2)] border"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Lock className="h-3 w-3 text-yellow-400" />
+                                  <span>Please purchase a plan to access this feature.</span>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            menuButton
+                          )}
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </TooltipProvider>
               </SidebarGroupContent>
             </SidebarGroup>
           )}
