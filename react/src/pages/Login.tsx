@@ -4,13 +4,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/api-config";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Mail, Lock, Sparkles, AlertTriangle, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { AuthBackground } from "@/components/AuthBackground";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -54,6 +57,12 @@ export default function Login() {
 
       if (!res.ok) {
         const data = await res.json();
+        // Handle email not verified (403)
+        if (res.status === 403 && data.detail === "email_not_verified") {
+          setEmailNotVerified(true);
+          setLoading(false);
+          return;
+        }
         throw new Error(data.detail || "Login failed");
       }
       const user = await res.json();
@@ -83,40 +92,30 @@ export default function Login() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first.");
+      return;
+    }
+    setResendingVerification(true);
+    try {
+      await fetch(`${API_BASE_URL}/users/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      toast.success("Verification code sent! Check your inbox.");
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+    } catch {
+      toast.error("Failed to resend. Please try again.");
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-[200%] h-[200%] -top-1/2 -left-1/2 animate-[spin_20s_linear_infinite] bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4wNSkiLz48L3N2Zz4=')] opacity-30" />
-      </div>
-
-      {/* Floating particles effect */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute bg-blue-400/30 rounded-full"
-            style={{
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0, 0.5, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 5,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "linear",
-            }}
-          />
-        ))}
-      </div>
-
+    <div className="min-h-screen bg-[#080818] flex items-center justify-center p-4 relative overflow-hidden">
+      <AuthBackground />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -201,6 +200,28 @@ export default function Login() {
               <p className="text-sm font-medium text-red-400 mt-2 p-3 bg-red-500/10 rounded-xl text-center border border-red-500/20">
                 {errors.general}
               </p>
+            )}
+
+            {/* Email not verified banner */}
+            {emailNotVerified && (
+              <div className="mt-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  <p className="text-sm font-semibold text-yellow-400">Email not verified</p>
+                </div>
+                <p className="text-xs text-yellow-300/70 mb-3">
+                  Please verify your email before logging in. Check your inbox or resend the code.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendingVerification}
+                  className="w-full h-10 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 text-yellow-300 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <RotateCcw className={`w-4 h-4 ${resendingVerification ? "animate-spin" : ""}`} />
+                  {resendingVerification ? "Sending..." : "Resend Verification Email"}
+                </button>
+              </div>
             )}
 
             <button

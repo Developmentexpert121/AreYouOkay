@@ -5,6 +5,7 @@ import shutil
 import os
 import uuid
 import bcrypt
+import random
 from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
@@ -49,6 +50,7 @@ def send_reset_email(to_email: str, reset_link: str):
     smtp_pass = os.environ.get("MAIL_PASSWORD")
     from_email = os.environ.get("MAIL_FROM_ADDRESS", smtp_user)
     from_name = os.environ.get("MAIL_FROM_NAME", "r u good? AI")
+    app_url = os.environ.get("APP_FRONTEND_URL", "https://orca-app-8rqa7.ondigitalocean.app")
 
     if not smtp_user or not smtp_pass:
         print("SMTP credentials not configured. Email will not be sent.")
@@ -59,25 +61,41 @@ def send_reset_email(to_email: str, reset_link: str):
     msg['To'] = to_email
     msg['Subject'] = "Reset Your Password - r u good?"
 
-    html_content = f"""
-    <html>
-      <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <h2 style="color: #333333; text-align: center;">Password Reset Request</h2>
-          <p style="color: #555555; font-size: 16px;">Hello,</p>
-          <p style="color: #555555; font-size: 16px;">We received a request to reset your password for your r u good? account. If you didn't make this request, you can safely ignore this email.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{reset_link}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">Reset Password</a>
-          </div>
-          <p style="color: #555555; font-size: 16px;">Or copy and paste this link into your browser:</p>
-          <p style="color: #3b82f6; font-size: 14px; word-break: break-all;">{reset_link}</p>
-          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;" />
-          <p style="color: #999999; font-size: 12px; text-align: center;">r u good? AI &copy; 2026</p>
-        </div>
-      </body>
-    </html>
-    """
-    
+    logo_url = f"{app_url.rstrip('/')}/final%20logo.png"
+
+    html_content = (
+        "<html><body style='font-family:Arial,sans-serif;background:#0a0a0a;padding:20px;'>"
+        "<div style='max-width:560px;margin:0 auto;background:#1a1a2e;padding:40px;"
+        "border-radius:16px;border:1px solid #2a2a4a;box-shadow:0 20px 60px rgba(0,0,0,.5);'>"
+        # Logo
+        "<div style='text-align:center;margin-bottom:28px;'>"
+        "<img src='" + logo_url + "' alt='r u good? AI' width='80' height='80' "
+        "style='border-radius:16px;object-fit:contain;' />"
+        "</div>"
+        # Title
+        "<h1 style='color:#fff;font-size:22px;font-weight:800;text-align:center;margin:0 0 8px;'>r u good? AI</h1>"
+        "<h2 style='color:#fff;font-size:18px;text-align:center;margin-bottom:8px;'>Password Reset Request</h2>"
+        "<p style='color:#9ca3af;text-align:center;font-size:14px;margin-bottom:32px;'>"
+        "We received a request to reset your password. Click the button below to proceed.</p>"
+        # Reset button
+        "<div style='text-align:center;margin-bottom:28px;'>"
+        "<a href='" + reset_link + "' "
+        "style='display:inline-block;background:linear-gradient(135deg,#3b82f6,#a855f7);"
+        "color:#fff;padding:14px 36px;text-decoration:none;border-radius:12px;"
+        "font-weight:800;font-size:15px;letter-spacing:.5px;'>RESET PASSWORD</a>"
+        "</div>"
+        # Fallback link
+        "<p style='color:#6b7280;font-size:12px;text-align:center;margin-bottom:8px;'>Or copy and paste this link:</p>"
+        "<p style='color:#3b82f6;font-size:12px;word-break:break-all;text-align:center;margin-bottom:28px;'>"
+        + reset_link +
+        "</p>"
+        "<p style='color:#6b7280;font-size:12px;text-align:center;'>"
+        "If you didn't request this, you can safely ignore this email.</p>"
+        "<hr style='border:0;border-top:1px solid #2a2a4a;margin:24px 0;' />"
+        "<p style='color:#4b5563;font-size:11px;text-align:center;'>r u good? AI &copy; 2026</p>"
+        "</div></body></html>"
+    )
+
     msg.attach(MIMEText(html_content, 'html'))
 
     try:
@@ -88,11 +106,81 @@ def send_reset_email(to_email: str, reset_link: str):
         server.quit()
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send reset email: {e}")
         return False
 
 
-@router.post("/", response_model=schemas.UserResponse)
+
+def send_verification_email(to_email: str, code: str):
+    smtp_host = os.environ.get("MAIL_HOST", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("MAIL_PORT", 587))
+    smtp_user = os.environ.get("MAIL_USERNAME")
+    smtp_pass = os.environ.get("MAIL_PASSWORD")
+    from_email = os.environ.get("MAIL_FROM_ADDRESS", smtp_user)
+    from_name = os.environ.get("MAIL_FROM_NAME", "r u good? AI")
+    app_url = os.environ.get("APP_FRONTEND_URL", "https://orca-app-8rqa7.ondigitalocean.app")
+
+    if not smtp_user or not smtp_pass:
+        print(f"[EMAIL VERIFY] SMTP not configured. Code for {to_email}: {code}")
+        return False
+
+    msg = MIMEMultipart()
+    msg['From'] = f"{from_name} <{from_email}>"
+    msg['To'] = to_email
+    msg['Subject'] = "Verify Your Email - r u good?"
+
+    logo_url = f"{app_url.rstrip('/')}/final%20logo.png"
+
+    # Build HTML using concatenation to avoid f-string issues with CSS curly braces
+    html_content = (
+        "<html><body style='font-family:Arial,sans-serif;background:#0a0a0a;padding:20px;'>"
+        "<div style='max-width:560px;margin:0 auto;background:#1a1a2e;padding:40px;"
+        "border-radius:16px;border:1px solid #2a2a4a;box-shadow:0 20px 60px rgba(0,0,0,.5);'>"
+        # Logo image
+        "<div style='text-align:center;margin-bottom:28px;'>"
+        "<img src='" + logo_url + "' alt='r u good? AI' width='80' height='80' "
+        "style='border-radius:16px;object-fit:contain;' />"
+        "</div>"
+        "<h1 style='color:#fff;font-size:22px;font-weight:800;text-align:center;margin:0 0 8px;'>r u good? AI</h1>"
+        "<h2 style='color:#fff;font-size:20px;text-align:center;margin-bottom:8px;'>Verify Your Email</h2>"
+        "<p style='color:#9ca3af;text-align:center;font-size:14px;margin-bottom:32px;'>"
+        "Enter the code below to activate your account.</p>"
+        "<div style='background:#0f0f1e;border:1px solid #2a2a4a;border-radius:12px;"
+        "padding:24px;text-align:center;margin-bottom:32px;'>"
+        "<p style='color:#9ca3af;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;'>"
+        "Your verification code</p>"
+        "<p style='color:#fff;font-size:40px;font-weight:900;letter-spacing:12px;margin:0;font-family:monospace;'>"
+        + code +
+        "</p>"
+        "<p style='color:#6b7280;font-size:12px;margin:12px 0 0;'>Expires in 30 minutes</p>"
+        "</div>"
+        "<p style='color:#6b7280;font-size:12px;text-align:center;'>"
+        "If you didn't create an account, you can safely ignore this email.</p>"
+        "<hr style='border:0;border-top:1px solid #2a2a4a;margin:24px 0;' />"
+        "<p style='color:#4b5563;font-size:11px;text-align:center;'>r u good? AI &copy; 2026</p>"
+        "</div></body></html>"
+    )
+
+    msg.attach(MIMEText(html_content, 'html'))
+
+    try:
+        print(f"[EMAIL VERIFY] Connecting to {smtp_host}:{smtp_port} as {smtp_user}")
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+        server.quit()
+        print(f"[EMAIL VERIFY] Sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        import traceback
+        print(f"[EMAIL VERIFY] Failed to send to {to_email}: {e}")
+        traceback.print_exc()
+        return False
+
+
+
+@router.post("/")
 def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
@@ -101,12 +189,23 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
     user_data = user.dict()
     password = user_data.pop("password")
     user_data["hashed_password"] = hash_password(password)
+    user_data["email_verified"] = False
+
+    # Generate 6-digit OTP
+    otp_code = str(random.randint(100000, 999999))
+    user_data["email_verification_token"] = otp_code
+    user_data["email_verification_expires"] = datetime.utcnow() + timedelta(minutes=30)
 
     new_user = models.User(**user_data)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+
+    # Send verification email (also prints code to console as fallback)
+    print(f"[EMAIL VERIFY] OTP for {user.email}: {otp_code}")
+    send_verification_email(user.email, otp_code)
+
+    return {"message": "verification_required", "email": user.email}
 
 
 @router.post("/forgot-password")
@@ -147,13 +246,54 @@ def reset_password(confirm: schemas.PasswordResetConfirm, db: Session = Depends(
     return {"message": "Password updated successfully"}
 
 
+@router.post("/verify-email")
+def verify_email(payload: schemas.EmailVerifyRequest, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.email_verified:
+        raise HTTPException(status_code=400, detail="Email already verified")
+    if not user.email_verification_token or user.email_verification_token != payload.code:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+    if not user.email_verification_expires or user.email_verification_expires < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new one.")
+
+    user.email_verified = True
+    user.email_verification_token = None
+    user.email_verification_expires = None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.post("/resend-verification")
+def resend_verification(payload: schemas.ResendVerificationRequest, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if not user:
+        # Return generic success to prevent email enumeration
+        return {"message": "If that email is registered and unverified, a new code has been sent."}
+    if user.email_verified:
+        return {"message": "Email is already verified. You can log in."}
+
+    otp_code = str(random.randint(100000, 999999))
+    user.email_verification_token = otp_code
+    user.email_verification_expires = datetime.utcnow() + timedelta(minutes=30)
+    db.commit()
+
+    print(f"[EMAIL VERIFY] Resend OTP for {payload.email}: {otp_code}")
+    send_verification_email(payload.email, otp_code)
+
+    return {"message": "A new verification code has been sent to your email."}
+
+
 @router.post("/login", response_model=schemas.UserResponse)
 def login_user(creds: schemas.UserLogin, db: Session = Depends(database.get_db)):
-    # Normal login logic
-
     user = db.query(models.User).filter(models.User.email == creds.email).first()
     if not user or not verify_password(creds.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    # Block login if email not verified (only applies to manually-registered accounts)
+    if not user.email_verified:
+        raise HTTPException(status_code=403, detail="email_not_verified")
     return user
 
 

@@ -32,6 +32,11 @@ class User(Base):
     reset_token = Column(String, nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)
 
+    # Email verification
+    email_verified = Column(Boolean, default=False)
+    email_verification_token = Column(String, nullable=True)
+    email_verification_expires = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 

@@ -4,7 +4,7 @@ import {
   CreditCard,
   Shield,
   LogOut,
-  CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -43,7 +43,6 @@ export function AppSidebar() {
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 
-
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = (e: React.MouseEvent) => {
@@ -53,19 +52,29 @@ export function AppSidebar() {
   };
 
   return (
+    // collapsible="offcanvas" → slides completely off-screen (no icon strip)
     <Sidebar
-      collapsible="icon"
-      className="border-r border-white/10 bg-black/40 backdrop-blur-xl"
+      collapsible="offcanvas"
+      className="border-r border-white/10 bg-black/60 backdrop-blur-xl"
     >
       <SidebarContent>
-        <div className="flex items-center gap-3 py-2">
+        {/* Logo — always full size since sidebar is fully visible or fully hidden */}
+        <div className="flex items-center gap-3 px-4 py-4">
           <motion.div
-            whileHover={{ rotate: 10, scale: 1.1 }}
+            whileHover={{ rotate: 10, scale: 1.05 }}
             transition={{ duration: 0.3 }}
             className="flex items-center justify-center flex-shrink-0"
           >
-            <img src="/final logo.png" alt="Logo" className="w-20 h-20 object-contain" />
+            <img
+              src="/final logo.png"
+              alt="Logo"
+              className="w-14 h-14 object-contain rounded-xl"
+            />
           </motion.div>
+          <div className="flex flex-col">
+            <span className="text-white font-extrabold text-base leading-tight">r u good?</span>
+            <span className="text-xs text-blue-400 font-semibold tracking-wide">AI Safety</span>
+          </div>
         </div>
 
         <div className="px-3 py-2">
@@ -99,12 +108,17 @@ export function AppSidebar() {
                             activeClassName="!bg-gradient-to-r !from-blue-500/20 !to-purple-500/20 !text-white !border !border-blue-500/30"
                           >
                             <item.icon
-                              className={`h-5 w-5 ${isActive(item.url)
+                              className={`h-5 w-5 flex-shrink-0 ${isActive(item.url)
                                 ? "text-blue-400"
                                 : "text-gray-400 group-hover:text-white"
                                 }`}
                             />
-                            {!collapsed && <span>{item.title}</span>}
+                            <span className="flex-1">{item.title}</span>
+                            {isRestricted && (
+                              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/40 flex-shrink-0" style={{ filter: "none", opacity: 1 }}>
+                                <Lock className="h-3 w-3 text-black" strokeWidth={3} />
+                              </span>
+                            )}
                           </NavLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -139,12 +153,12 @@ export function AppSidebar() {
                           activeClassName="!bg-gradient-to-r !from-blue-500/20 !to-purple-500/20 !text-white !border !border-blue-500/30"
                         >
                           <item.icon
-                            className={`h-5 w-5 ${isActive(item.url)
+                            className={`h-5 w-5 flex-shrink-0 ${isActive(item.url)
                               ? "text-blue-400"
                               : "text-gray-400 group-hover:text-white"
                               }`}
                           />
-                          {!collapsed && <span>{item.title}</span>}
+                          <span>{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -168,8 +182,8 @@ export function AppSidebar() {
                 onClick={handleLogout}
                 className="flex items-center gap-3 font-medium"
               >
-                <LogOut className="h-5 w-5 text-gray-400 group-hover:text-rose-400 transition-colors" />
-                {!collapsed && <span>Sign Out</span>}
+                <LogOut className="h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-rose-400 transition-colors" />
+                <span>Sign Out</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

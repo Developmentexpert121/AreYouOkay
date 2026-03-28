@@ -39,9 +39,19 @@ class UserResponse(UserBase):
     id: int
     subscription_status: str
     profile_picture: Optional[str] = None
+    email_verified: Optional[bool] = False
 
     class Config:
         from_attributes = True
+
+
+class EmailVerifyRequest(BaseModel):
+    email: str
+    code: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: str
 
 
 class UserUpdate(BaseModel):

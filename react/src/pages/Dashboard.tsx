@@ -113,40 +113,8 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-[200%] h-[200%] -top-1/2 -left-1/2 animate-[spin_20s_linear_infinite] bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4wNSkiLz48L3N2Zz4=')] opacity-30" />
-      </div>
-
-      {/* Floating particles effect */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute bg-blue-400/30 rounded-full"
-            style={{
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0, 0.5, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 5,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "linear",
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto space-y-12 pb-12 pt-8 px-4 md:px-6">
+    <div className="min-h-screen relative">
+      <div className="relative z-10 max-w-6xl mx-auto space-y-10 pb-12 pt-6 px-4 md:px-6">
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -195,82 +163,116 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <form onSubmit={handleProfileSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Your Phone</label>
-                    <div className="relative">
-                      <Input
-                        placeholder="+1 (555) 000-0000"
-                        value={profileForm.phone_number}
-                        onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
-                        className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <form onSubmit={handleProfileSubmit} className="space-y-5">
+
+                  {/* Row 1: Schedule settings */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Your Phone</label>
+                      <div className="relative">
+                        <Input
+                          placeholder="+1 (555) 000-0000"
+                          value={profileForm.phone_number}
+                          onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                        />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Time Zone</label>
+                      <Select value={profileForm.timezone} onValueChange={(v) => setProfileForm({ ...profileForm, timezone: v })}>
+                        <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl font-medium">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                          {timezones.map(tz => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Check-in Time</label>
+                      <div className="relative">
+                        <Input
+                          type="time"
+                          value={profileForm.check_in_time}
+                          onChange={(e) => setProfileForm({ ...profileForm, check_in_time: e.target.value })}
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                        />
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Time Zone</label>
-                    <Select value={profileForm.timezone} onValueChange={(v) => setProfileForm({ ...profileForm, timezone: v })}>
-                      <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl font-medium">
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
-                        {timezones.map(tz => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Check-in Time</label>
-                    <div className="relative">
-                      <Input
-                        type="time"
-                        value={profileForm.check_in_time}
-                        onChange={(e) => setProfileForm({ ...profileForm, check_in_time: e.target.value })}
-                        className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                  {/* Divider */}
+                  <div className="border-t border-white/10 pt-1">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Emergency Contacts</p>
+
+                    {/* Row 2: Primary contact name + phone */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 1 — Name</label>
+                        <div className="relative">
+                          <Input
+                            placeholder="Full Name"
+                            value={profileForm.emergency_contact_name}
+                            onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_name: e.target.value })}
+                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                          />
+                          <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 1 — Phone</label>
+                        <div className="relative">
+                          <Input
+                            placeholder="+1 (555) 000-0000"
+                            value={profileForm.emergency_contact_phone}
+                            onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value })}
+                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                          />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Secondary contact name + phone */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 2 — Name <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
+                        <div className="relative">
+                          <Input
+                            placeholder="Full Name"
+                            value={profileForm.emergency_contact_name_2}
+                            onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_name_2: e.target.value })}
+                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                          />
+                          <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 2 — Phone <span className="text-gray-600 normal-case font-normal">(optional)</span></label>
+                        <div className="relative">
+                          <Input
+                            placeholder="+1 (555) 000-0000"
+                            value={profileForm.emergency_contact_phone_2}
+                            onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone_2: e.target.value })}
+                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                          />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Emergency contact name</label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Name"
-                        value={profileForm.emergency_contact_name}
-                        onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_name: e.target.value })}
-                        className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                      <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Emergency contact phone</label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Phone"
-                        value={profileForm.emergency_contact_phone}
-                        onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value })}
-                        className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 2 Name (Opt)</label>
-                    <Input placeholder="Secondary Name" value={profileForm.emergency_contact_name_2} onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_name_2: e.target.value })} className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl px-4 font-medium" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact 2 Phone (Opt)</label>
-                    <Input placeholder="Secondary Phone" value={profileForm.emergency_contact_phone_2} onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone_2: e.target.value })} className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl px-4 font-medium" />
-                  </div>
-                  <div className="flex items-end">
-                    <Button type="submit" className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl gap-2 shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all disabled:opacity-50" disabled={updatingProfile}>
-                      {updatingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Save Details
-                    </Button>
-                  </div>
+
+                  {/* Row 4: Save button full width */}
+                  <Button type="submit" className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl gap-2 shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all disabled:opacity-50" disabled={updatingProfile}>
+                    {updatingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Details
+                  </Button>
                 </form>
               </div>
+
             </motion.div>
           )}
         </AnimatePresence>

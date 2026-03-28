@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/api-config";
+import { AuthBackground } from "@/components/AuthBackground";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Mail, Lock, User, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
@@ -81,15 +82,23 @@ export default function Signup() {
         const data = await res.json();
         throw new Error(data.detail || "Registration failed");
       }
-      const user = await res.json();
-      localStorage.setItem("user", JSON.stringify(user));
+      const data = await res.json();
 
+      // Backend returns {message: "verification_required", email} for manual registrations
+      if (data.message === "verification_required") {
+        toast.success("Account created! Check your email for a verification code.");
+        navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
+
+      // Fallback (should not happen for manual registration)
+      localStorage.setItem("user", JSON.stringify(data));
       toast.success("Account created successfully!");
 
       const searchParams = new URLSearchParams(window.location.search);
       const redirect = searchParams.get("redirect");
 
-      if (user.subscription_status === "active") {
+      if (data.subscription_status === "active") {
         if (redirect === "checkout") {
           navigate("/subscription?checkout=true");
         } else {
@@ -107,39 +116,8 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-[200%] h-[200%] -top-1/2 -left-1/2 animate-[spin_20s_linear_infinite] bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4wNSkiLz48L3N2Zz4=')] opacity-30" />
-      </div>
-
-      {/* Floating particles effect */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute bg-blue-400/30 rounded-full"
-            style={{
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0, 0.5, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 5,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "linear",
-            }}
-          />
-        ))}
-      </div>
-
+    <div className="min-h-screen bg-[#080818] flex items-center justify-center p-4 relative overflow-hidden">
+      <AuthBackground />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
