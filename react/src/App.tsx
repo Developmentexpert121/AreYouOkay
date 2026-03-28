@@ -20,7 +20,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: React.ReactNode, requireAdmin?: boolean, requireUser?: boolean }) => {
+const ProtectedRoute = ({ children, requireAdmin }: { children: React.ReactNode, requireAdmin?: boolean }) => {
   const location = useLocation();
   const savedUser = localStorage.getItem("user");
   let user = null;
@@ -33,17 +33,24 @@ const ProtectedRoute = ({ children, requireAdmin, requireUser }: { children: Rea
   
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
+  const userOnlyPaths = ["/dashboard", "/history", "/subscription", "/profile"];
+  const adminOnlyPaths = ["/admin"];
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Admin bypass
+  // Admin access control
   if (isAdmin) {
-    if (requireUser && location.pathname !== "/admin") {
+    if (userOnlyPaths.includes(location.pathname)) {
       return <Navigate to="/admin" replace />;
     }
     return <>{children}</>;
+  }
+
+  // Regular user access control
+  if (adminOnlyPaths.includes(location.pathname)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Subscription check for regular users
