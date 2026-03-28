@@ -4,10 +4,11 @@ import {
   ArrowRight, Shield, Clock, HeartHandshake, PhoneCall,
   CheckCircle2, Star, Bell, Users, MessageSquare, AlertTriangle, Sparkles,
   Cpu, Network, Activity, Brain, Zap, Eye, BarChart3, Radar, Gauge,
-  Facebook, Instagram, Linkedin, MapPin
+  Facebook, Instagram, Linkedin, MapPin, Menu, X
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "@/lib/api-config";
+import { toast } from "sonner";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -83,6 +84,7 @@ const GlowText = ({ children, className = "" }: { children: React.ReactNode; cla
 );
 
 export default function Index() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const heroRef = useRef<HTMLElement>(null);
   const mouseX = useMotionValue(0);
@@ -150,7 +152,7 @@ export default function Index() {
             <a href="#pricing" className="hover:text-blue-400 transition-colors">Pricing</a>
             <a href="#ai-insights" className="hover:text-blue-400 transition-colors">AI Insights</a>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             {user ? (
               <Link to="/dashboard" className="text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-2.5 rounded-full hover:shadow-lg hover:shadow-blue-500/30 transition-all">
                 Dashboard
@@ -166,7 +168,46 @@ export default function Index() {
               </>
             )}
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="md:hidden text-white p-2"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {/* Mobile Navigation Dropdown */}
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-black/90 backdrop-blur-xl border-t border-white/10 px-6 py-6 flex flex-col gap-6"
+          >
+            <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">Features</a>
+            <a href="#how-it-works" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">How it works</a>
+            <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">Pricing</a>
+            <a href="#ai-insights" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">AI Insights</a>
+            <div className="flex flex-col gap-4 pt-4 border-t border-white/10">
+              {user ? (
+                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="text-center font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3 rounded-xl">
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-center font-semibold text-gray-300 hover:text-white px-4 py-3 border border-white/10 rounded-xl">
+                    Log in
+                  </Link>
+                  <Link to="/signup" onClick={() => setIsMenuOpen(false)} className="text-center font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3 rounded-xl">
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
       </nav>
 
       {/* ── HERO (AI Neural Network Theme) ── */}
@@ -207,9 +248,9 @@ export default function Index() {
           ))}
         </svg>
 
-        <div className="w-full max-w-7xl mx-auto px-8 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="w-full max-w-7xl mx-auto px-8 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-12 items-center relative z-10">
           {/* LEFT — Text & CTAs */}
-          <div className="flex flex-col items-start gap-6">
+          <div className="flex flex-col items-center lg:items-start gap-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -231,7 +272,7 @@ export default function Index() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-5xl md:text-7xl font-extrabold leading-tight"
+              className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-tight text-center lg:text-left"
             >
               Your{" "}
               <GlowText className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -245,7 +286,7 @@ export default function Index() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-gray-400 text-lg leading-relaxed max-w-md"
+              className="text-gray-400 text-lg leading-relaxed max-w-md text-center lg:text-left"
             >
               Intelligent SMS check-ins with automated escalation. Stay connected with the people who matter most — gracefully and securely.
             </motion.p>
@@ -309,7 +350,7 @@ export default function Index() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -left-4 top-8 bg-black/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl max-w-[180px] z-10 border border-white/10"
+              className="hidden xl:block absolute -left-2 sm:-left-4 top-8 bg-black/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl max-w-[140px] sm:max-w-[180px] z-10 border border-white/10"
             >
               <div className="flex items-center gap-2 mb-1">
                 <motion.div
@@ -330,7 +371,7 @@ export default function Index() {
             <motion.div
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute -right-4 bottom-12 bg-black/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl max-w-[190px] z-10 border border-white/10"
+              className="hidden xl:block absolute -right-2 sm:-right-4 bottom-12 bg-black/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl max-w-[150px] sm:max-w-[190px] z-10 border border-white/10"
             >
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-8 h-8 bg-amber-500/20 rounded-xl flex items-center justify-center">
@@ -348,7 +389,7 @@ export default function Index() {
               initial={{ opacity: 0, y: 40, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
-              className="relative z-20 w-[240px] md:w-[270px]"
+              className="relative z-20 w-[180px] sm:w-[240px] md:w-[270px]"
             >
               <div className="relative">
                 <motion.div

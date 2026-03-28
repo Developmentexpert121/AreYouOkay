@@ -220,23 +220,37 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 
 @router.post("/forgot-password")
 def forgot_password(request: schemas.PasswordResetRequest, db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter(models.User.email == request.email).first()
-    if not user:
-        return {"message": "If this email is registered, you will receive a reset link."}
+    try:
+        user = db.query(models.User).filter(models.User.email == request.email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="email_not_registered")
 
-    token = str(uuid.uuid4())
-    user.reset_token = token
-    user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
-    db.commit()
+        # Restrict to verified users
+        if not user.email_verified:
+            raise HTTPException(status_code=403, detail="email_not_verified")
 
-    app_base_url = os.environ.get("APP_FRONTEND_URL", "http://localhost:8080")
-    reset_link = f"{app_base_url}/reset-password?token={token}&email={user.email}"
-    print(f"\n[PASSWORD RESET] Link for {user.email}: {reset_link}\n")
+        token = str(uuid.uuid4())
+        user.reset_token = token
+        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        db.commit()
 
-    # Send the email
-    send_reset_email(user.email, reset_link)
+        app_base_url = os.environ.get("APP_FRONTEND_URL", "http://localhost:8080")
+        reset_link = f"{app_base_url}/reset-password?token={token}&email={user.email}"
+        print(f"\n[PASSWORD RESET] Link for {user.email}: {reset_link}\n")
 
-    return {"message": "Success", "token_dev": token}
+        # Send the email
+        success = send_reset_email(user.email, reset_link)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to send reset email. Please check server SMTP configuration.")
+
+        return {"message": "Success", "token_dev": token}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Request failed: {str(e)}")
 
 
 @router.post("/reset-password")

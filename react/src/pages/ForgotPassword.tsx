@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Mail, ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api-config";
 import { motion } from "framer-motion";
 import { AuthBackground } from "@/components/AuthBackground";
@@ -11,10 +11,12 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) { toast.error("Please enter your email"); return; }
+    setError(null);
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/users/forgot-password`, {
@@ -29,7 +31,15 @@ export default function ForgotPassword() {
       setSubmitted(true);
       toast.success("Reset link sent!");
     } catch (err: any) {
-      toast.error(err.message);
+      if (err.message === "email_not_verified") {
+        setError("your email is not verified");
+        toast.error("your email is not verified");
+      } else if (err.message === "email_not_registered") {
+        setError("your email is not registered");
+        toast.error("your email is not registered");
+      } else {
+        toast.error(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -119,6 +129,17 @@ export default function ForgotPassword() {
             />
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-400 text-sm font-medium"
+            >
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              {error}
+            </motion.div>
+          )}
 
           <button
             type="submit"

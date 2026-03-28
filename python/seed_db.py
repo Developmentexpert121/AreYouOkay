@@ -36,7 +36,9 @@ def run_seed():
         needed = {
             "email_verified": "BOOLEAN DEFAULT FALSE NOT NULL",
             "email_verification_token": "TEXT",
-            "email_verification_expires": "TIMESTAMP"
+            "email_verification_expires": "TIMESTAMP",
+            "reset_token": "TEXT",
+            "reset_token_expires": "TIMESTAMP"
         }
 
         for col, definition in needed.items():
