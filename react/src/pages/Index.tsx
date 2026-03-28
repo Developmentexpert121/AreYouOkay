@@ -271,12 +271,12 @@ export default function Index() {
                   >
                     Start Free Trial <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link
+                  {/* <Link
                     to="/login"
                     className="flex items-center justify-center gap-2 bg-white/10 border border-white/20 text-white font-semibold px-7 py-3.5 rounded-full hover:bg-white/20 transition-all text-sm"
                   >
                     View Demo
-                  </Link>
+                  </Link> */}
                 </>
               )}
             </motion.div>
