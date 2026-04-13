@@ -486,7 +486,7 @@ export default function Dashboard() {
               className="w-full h-12 rounded-xl border-white/20 bg-white/5 text-white font-bold hover:bg-white/10 transition-all mt-auto"
               onClick={() => navigate("/profile")}
             >
-              Manage Contacts
+              Profile Settings
             </Button>
           </motion.div>
         </div>

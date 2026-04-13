@@ -271,7 +271,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Right Side: AI Visual */}
+        {/* Right Side: Visual */}
         <div className="hidden md:flex flex-1 relative bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 overflow-hidden items-center justify-center p-12 text-center">
           {/* Animated neural network lines */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30">
@@ -306,10 +306,10 @@ export default function Login() {
               <Sparkles className="w-10 h-10 text-white" />
             </motion.div>
             <h2 className="text-3xl font-extrabold text-white mb-4 tracking-tight">
-              AI-Powered Safety
+              Safety Check-In
             </h2>
             <p className="text-gray-300 leading-relaxed text-sm">
-              Automated SMS check-ins with intelligent escalation. Stay connected with the people who matter most — gracefully and securely.
+              Automated SMS check-ins with smart escalation. Stay connected with the people who matter most — gracefully and securely.
             </p>
             <div className="mt-8 flex justify-center gap-3">
               <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />

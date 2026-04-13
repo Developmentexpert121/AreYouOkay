@@ -1,0 +1,161 @@
+{
+  "name": "AI Social Media Content Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * 1-5" }]
+        }
+      },
+      "id": "trigger-sm",
+      "name": "Schedule Mon-Fri 8AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const topics = [\n  { topic: 'AI tools that save 10 hours per week', niche: 'productivity', cta: 'Book a free audit' },\n  { topic: '5 signs your business needs automation now', niche: 'business growth', cta: 'DM us to learn more' },\n  { topic: 'How AI is changing customer support', niche: 'customer service', cta: 'See our case study' },\n  { topic: 'ChatGPT vs Claude vs Gemini for your business', niche: 'AI comparison', cta: 'Get our free guide' },\n  { topic: 'Real examples of AI ROI in small business', niche: 'ROI and results', cta: 'Talk to our team' }\n];\nconst personas = [\n  { name: 'TechGrowthPro', tone: 'professional and data-driven', audience: 'B2B decision makers' },\n  { name: 'AISimplified', tone: 'friendly and educational', audience: 'small business owners' }\n];\nconst dayIndex = new Date().getDay() - 1;\nconst todayTopic = topics[dayIndex % topics.length];\nreturn personas.map(persona => ({ json: { ...todayTopic, ...persona } }));"
+      },
+      "id": "topics-sm",
+      "name": "Load Topic and Personas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [380, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst prompt = [\n  'You are a social media creator for persona ' + d.name + '.',\n  'Tone: ' + d.tone + '. Audience: ' + d.audience + '.',\n  'Create content about this topic: ' + d.topic + ' (niche: ' + d.niche + ').',\n  'CTA to use: ' + d.cta,\n  '',\n  'Respond ONLY with valid JSON in this exact format with no extra text:',\n  '{\"twitter\":{\"post\":\"max 280 chars with 2-3 hashtags\",\"image_prompt\":\"visual prompt\"},\"linkedin\":{\"post\":\"150-200 words with 3-5 hashtags\",\"image_prompt\":\"banner prompt\"},\"instagram\":{\"caption\":\"100-150 words with 10 hashtags at end\",\"image_prompt\":\"square image prompt\",\"story_text\":\"3 bullet points\"}}'\n].join('\\n');\n\nconst requestBody = JSON.stringify({\n  model: 'claude-opus-4-5',\n  max_tokens: 1200,\n  messages: [{ role: 'user', content: prompt }]\n});\n\nreturn [{ json: { ...d, requestBody } }];"
+      },
+      "id": "build-sm",
+      "name": "Build Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "YOUR_ANTHROPIC_API_KEY" },
+            { "name": "anthropic-version", "value": "2023-06-01" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "id": "claude-sm",
+      "name": "Claude Generate Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.content[0].text.trim();\n\nfunction extractFirstJson(str) {\n  let depth = 0, inString = false, escape = false, start = -1;\n  for (let i = 0; i < str.length; i++) {\n    const ch = str[i];\n    if (start === -1 && ch === '{') { start = i; }\n    if (start === -1) continue;\n    if (escape) { escape = false; continue; }\n    if (ch === '\\\\' && inString) { escape = true; continue; }\n    if (ch === '\"') { inString = !inString; continue; }\n    if (!inString) {\n      if (ch === '{') depth++;\n      else if (ch === '}') { depth--; if (depth === 0) return str.substring(start, i + 1); }\n    }\n  }\n  return null;\n}\n\nconst flat = raw.replace(/\\r?\\n/g, ' ');\nconst jsonStr = extractFirstJson(flat);\nif (!jsonStr) throw new Error('No JSON found: ' + raw.substring(0, 150));\n\nconst content = JSON.parse(jsonStr);\nconst persona = $('Load Topic and Personas').item.json;\n\nreturn [{\n  json: {\n    persona: persona.name,\n    topic: persona.topic,\n    generated_at: new Date().toISOString(),\n    twitter: content.twitter,\n    linkedin: content.linkedin,\n    instagram: content.instagram,\n    image_prompts: {\n      twitter: content.twitter ? content.twitter.image_prompt : '',\n      linkedin: content.linkedin ? content.linkedin.image_prompt : '',\n      instagram: content.instagram ? content.instagram.image_prompt : ''\n    }\n  }\n}];"
+      },
+      "id": "parse-sm",
+      "name": "Parse Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst twitterPost = d.twitter ? d.twitter.post : '';\nconst linkedinPost = d.linkedin ? d.linkedin.post : '';\n\nconst reviewPrompt = [\n  'Review this social media content for quality and brand safety.',\n  'Check: grammar, appropriate tone, no controversial claims, CTA is clear.',\n  '',\n  'Twitter: ' + twitterPost,\n  'LinkedIn: ' + linkedinPost,\n  '',\n  'Respond ONLY with valid JSON: {\"approved\":true,\"issues\":[],\"overall_score\":8}'\n].join('\\n');\n\nconst requestBody = JSON.stringify({\n  model: 'claude-opus-4-5',\n  max_tokens: 300,\n  messages: [{ role: 'user', content: reviewPrompt }]\n});\n\nreturn [{ json: { ...d, requestBody } }];"
+      },
+      "id": "build-review-sm",
+      "name": "Build Review Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "YOUR_ANTHROPIC_API_KEY" },
+            { "name": "anthropic-version", "value": "2023-06-01" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "id": "claude-review-sm",
+      "name": "Claude Quality Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1380, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.content[0].text.trim();\n\nfunction extractFirstJson(str) {\n  let depth = 0, inString = false, escape = false, start = -1;\n  for (let i = 0; i < str.length; i++) {\n    const ch = str[i];\n    if (start === -1 && ch === '{') { start = i; }\n    if (start === -1) continue;\n    if (escape) { escape = false; continue; }\n    if (ch === '\\\\' && inString) { escape = true; continue; }\n    if (ch === '\"') { inString = !inString; continue; }\n    if (!inString) {\n      if (ch === '{') depth++;\n      else if (ch === '}') { depth--; if (depth === 0) return str.substring(start, i + 1); }\n    }\n  }\n  return null;\n}\n\nconst flat = raw.replace(/\\r?\\n/g, ' ');\nconst jsonStr = extractFirstJson(flat);\nconst review = JSON.parse(jsonStr);\nconst content = $('Parse Content').item.json;\n\nreturn [{\n  json: {\n    ...content,\n    review_approved: review.approved,\n    review_score: review.overall_score,\n    review_issues: review.issues || [],\n    status: review.approved ? 'READY_TO_POST' : 'NEEDS_REVIEW'\n  }\n}];"
+      },
+      "id": "merge-sm",
+      "name": "Merge Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1580, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [{ "leftValue": "={{ $json.review_approved }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equal" } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "gate-sm",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('APPROVED — Persona:', $json.persona);\nconsole.log('Twitter:', $json.twitter ? $json.twitter.post : 'N/A');\nconsole.log('LinkedIn:', $json.linkedin ? $json.linkedin.post.substring(0, 100) + '...' : 'N/A');\nconsole.log('Score:', $json.review_score + '/10');\nconsole.log('Status: READY TO POST — connect Buffer/Hootsuite/Airtable here');\nreturn [{ json: { ...$json, action: 'READY_TO_POST' } }];"
+      },
+      "id": "post-sm",
+      "name": "Ready to Post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('FLAGGED — Issues:', ($json.review_issues || []).join(', '));\nreturn [{ json: { ...$json, action: 'FLAGGED_FOR_REVIEW' } }];"
+      },
+      "id": "flag-sm",
+      "name": "Flag for Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 420]
+    }
+  ],
+  "connections": {
+    "Schedule Mon-Fri 8AM": { "main": [[{ "node": "Load Topic and Personas", "type": "main", "index": 0 }]] },
+    "Load Topic and Personas": { "main": [[{ "node": "Build Claude Request", "type": "main", "index": 0 }]] },
+    "Build Claude Request": { "main": [[{ "node": "Claude Generate Content", "type": "main", "index": 0 }]] },
+    "Claude Generate Content": { "main": [[{ "node": "Parse Content", "type": "main", "index": 0 }]] },
+    "Parse Content": { "main": [[{ "node": "Build Review Request", "type": "main", "index": 0 }]] },
+    "Build Review Request": { "main": [[{ "node": "Claude Quality Review", "type": "main", "index": 0 }]] },
+    "Claude Quality Review": { "main": [[{ "node": "Merge Review", "type": "main", "index": 0 }]] },
+    "Merge Review": { "main": [[{ "node": "Approved?", "type": "main", "index": 0 }]] },
+    "Approved?": { "main": [[{ "node": "Ready to Post", "type": "main", "index": 0 }], [{ "node": "Flag for Review", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["stage-2", "social-media"]
+}

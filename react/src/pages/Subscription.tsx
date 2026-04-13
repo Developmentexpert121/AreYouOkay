@@ -21,8 +21,8 @@ const features = [
   "Daily automated safety check-ins",
   "Instant SMS & Voice Call escalation",
   "Triple emergency contact routing",
-  "AI sentiment & safety analysis",
-  "24/7 automated AI monitoring",
+  "Sentiment & safety analysis",
+  "24/7 automated safety monitoring",
 ];
 
 export default function Subscription() {
@@ -48,14 +48,9 @@ export default function Subscription() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}&origin=${encodeURIComponent(window.location.origin)}`, {
-        method: "POST"
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
-      window.location.href = data.url;
+      window.location.href = `https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error("Failed to navigate to checkout.");
       setLoading(false);
     }
   };
@@ -255,7 +250,7 @@ export default function Subscription() {
                   <p className="text-sm font-bold text-blue-400">Limited Coverage</p>
                 </div>
                 <p className="text-xs text-blue-300/70 leading-relaxed relative z-10">
-                  You are currently unmonitored. Upgrade to Pro for full-scale AI emergency escalation and scheduled check-ins.
+                  You are currently unmonitored. Upgrade to Pro for full-scale automated emergency escalation and scheduled check-ins.
                 </p>
               </div>
             </motion.div>
@@ -282,7 +277,7 @@ export default function Subscription() {
                       <span className="text-xl font-medium text-gray-400">/mo</span>
                     </h2>
                     <p className="text-gray-400 font-medium mt-4 leading-relaxed max-w-sm">
-                      Complete peace of mind for you and your loved ones with our advanced automated AI safety engine.
+                      Complete peace of mind for you and your loved ones with our advanced automated safety engine.
                     </p>
                   </div>
 

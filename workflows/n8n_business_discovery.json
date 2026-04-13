@@ -1,0 +1,306 @@
+{
+  "name": "Business Discovery — LIVE LINK FUNNEL (V6)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-bd",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const leads = [\n  {\n    company: 'TechFlow Solutions',\n    contact: 'Sarah Mitchell',\n    title: 'VP of Operations',\n    industry: 'SaaS',\n    size: '50-200 employees',\n    pain_points: 'manual reporting, slow onboarding',\n    website: 'techflowsolutions.com'\n  },\n  {\n    company: 'GreenLeaf Logistics',\n    contact: 'David Chen',\n    title: 'Director of Technology',\n    industry: 'Logistics',\n    size: '200-500 employees',\n    pain_points: 'real-time tracking, carrier integration',\n    website: 'greenleaflogistics.net'\n  },\n  {\n    company: 'Pinnacle Dental Group',\n    contact: 'Dr. Amanda Ross',\n    title: 'Practice Owner',\n    industry: 'Healthcare',\n    size: '10-50 employees',\n    pain_points: 'patient retention, appointment reminders',\n    website: 'pinnacledental.com'\n  }\n];\nreturn leads.map(lead => ({ json: lead }));"
+      },
+      "id": "load-leads-bd",
+      "name": "Load Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_ANTHROPIC_API_KEY"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-3-5-sonnet-20240620', max_tokens: 1024, messages: [{ role: 'user', content: 'You are a B2B sales expert. Analyze this lead and produce:\\n1. Lead quality SCORE out of 10 with 2-line reason\\n2. Personalized cold EMAIL (subject + body, max 120 words)\\n3. LinkedIn DM (max 60 words)\\n\\nOur service: AI automation and workflow solutions\\n\\nLead:\\n- Company: ' + $json.company + ' (' + $json.industry + ', ' + $json.size + ')\\n- Contact: ' + $json.contact + ' — ' + $json.title + '\\n- Pain points: ' + $json.pain_points + '\\n- Website: ' + $json.website + '\\n\\nRespond ONLY with valid JSON:\\n{\\n  \"score\": <1-10>,\\n  \"score_reason\": \"<2 lines>\",\\n  \"email\": { \"subject\": \"<subject>\", \"body\": \"<body>\" },\\n  \"linkedin_dm\": \"<msg>\"\\n}' }] }) }}",
+        "options": {}
+      },
+      "id": "claude-analysis-bd",
+      "name": "Claude — Analyze Lead & Write Outreach",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.content[0].text.trim();\n\nfunction extractFirstJson(str) {\n  let depth = 0, inString = false, escape = false, start = -1;\n  for (let i = 0; i < str.length; i++) {\n    const ch = str[i];\n    if (start === -1 && ch === '{') { start = i; }\n    if (start === -1) continue;\n    if (escape) { escape = false; continue; }\n    if (ch === '\\\\' && inString) { escape = true; continue; }\n    if (ch === '\"') { inString = !inString; continue; }\n    if (!inString) {\n      if (ch === '{') depth++;\n      else if (ch === '}') { depth--; if (depth === 0) return str.substring(start, i + 1); }\n    }\n  }\n  return null;\n}\n\nconst flat = raw.replace(/\\r?\\n/g, ' ');\nconst jsonStr = extractFirstJson(flat);\nif (!jsonStr) throw new Error('No JSON found: ' + raw.substring(0, 150));\nconst result = JSON.parse(jsonStr);\nconst lead = $('Load Leads').item.json;\nconst email = result.email || {};\n\nreturn [{\n  json: {\n    ...lead,\n    score: result.score,\n    score_reason: result.score_reason,\n    email_subject: email.subject || 'N/A',\n    email_body: email.body || 'N/A',\n    linkedin_dm: result.linkedin_dm,\n    priority: result.score >= 7 ? 'HIGH' : result.score >= 5 ? 'MEDIUM' : 'LOW',\n    analyzed_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "parse-analysis-bd",
+      "name": "Parse & Score Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_ANTHROPIC_API_KEY"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-3-5-sonnet-20240620', max_tokens: 4000, messages: [{ role: 'user', content: 'Generate a complete, single-file HTML landing page (dark theme) for ' + $json.company + '. Personalized for ' + $json.contact + '. Highlights: how our AI automation solves ' + $json.pain_points + '. \\nRequirements: dark gradient background, premium feel, 3 benefit icons, Call to Action button. Respond ONLY with raw HTML code starting with <!DOCTYPE html>.' }] }) }}",
+        "options": {}
+      },
+      "id": "claude-landing-bd",
+      "name": "Claude — Generate Landing Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -672,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.content[0].text.trim();\nlet html = raw;\nif (html.includes('```html')) html = html.split('```html')[1].split('```')[0].trim();\nelse if (html.includes('```')) html = html.split('```')[1].split('```')[0].trim();\n\nconst data = $input.item.json;\nconst fileName = `/tmp/lp_${data.company.replace(/\\s/g, '_')}.html`;\nreturn [{ json: { ...data, fileName }, binary: { data: { data: Buffer.from(html).toString('base64'), fileName: 'page.html', mimeType: 'text/html' } } }];"
+      },
+      "id": "parse-landing-bd",
+      "name": "Parse & Store HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "fileContent": "={{ $binary.data }}",
+        "fileName": "={{ $json.fileName }}"
+      },
+      "id": "write-file-bd",
+      "name": "Write to Disk",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "saniyatanyal1@gmail.com",
+        "subject": "={{ $json.email_subject }} (Lead: {{ $json.company }})",
+        "message": "={{ $json.email_body }}\\n\\n--- LIVE LANDING PAGE LINK ---\\n👉 ==PASTE_YOUR_PUBLIC_WEBHOOK_URL==/p?c={{ $json.company.replace(/\\s/g, '_') }}\\n\\n(HTML generation status: Path saved to disk for hosting)",
+        "appendAttribution": false
+      },
+      "id": "gmail-send-bd",
+      "name": "Gmail — Send to saniyatanyal1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "p",
+        "options": {}
+      },
+      "id": "webhook-server-bd",
+      "name": "Webhook — Page Server",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        140
+      ],
+      "webhookId": "landing-page-server"
+    },
+    {
+      "parameters": {
+        "filePath": "=/tmp/lp_{{ $json.query.c }}.html"
+      },
+      "id": "read-file-server-bd",
+      "name": "Read Page from Disk",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-server-bd",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.webhookRespond",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Leads": {
+      "main": [
+        [
+          {
+            "node": "Claude — Analyze Lead & Write Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude — Analyze Lead & Write Outreach": {
+      "main": [
+        [
+          {
+            "node": "Parse & Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Claude — Generate Landing Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude — Generate Landing Page": {
+      "main": [
+        [
+          {
+            "node": "Parse & Store HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Store HTML": {
+      "main": [
+        [
+          {
+            "node": "Write to Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write to Disk": {
+      "main": [
+        [
+          {
+            "node": "Gmail — Send to saniyatanyal1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — Page Server": {
+      "main": [
+        [
+          {
+            "node": "Read Page from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Page from Disk": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

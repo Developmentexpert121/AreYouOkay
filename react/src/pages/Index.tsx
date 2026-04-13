@@ -121,14 +121,9 @@ export default function Index() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}`, {
-        method: "POST"
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
-      window.location.href = data.url;
+      window.location.href = `https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error("Failed to navigate to checkout.");
     }
   };
 
@@ -150,7 +145,7 @@ export default function Index() {
             <a href="#features" className="hover:text-blue-400 transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-blue-400 transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-blue-400 transition-colors">Pricing</a>
-            <a href="#ai-insights" className="hover:text-blue-400 transition-colors">AI Insights</a>
+            <a href="#safety-insights" className="hover:text-blue-400 transition-colors">Safety Insights</a>
           </div>
           <div className="hidden md:flex items-center gap-3">
             {user ? (
@@ -189,7 +184,7 @@ export default function Index() {
             <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">Features</a>
             <a href="#how-it-works" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">How it works</a>
             <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">Pricing</a>
-            <a href="#ai-insights" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">AI Insights</a>
+            <a href="#safety-insights" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-blue-400 transition-colors">Safety Insights</a>
             <div className="flex flex-col gap-4 pt-4 border-t border-white/10">
               {user ? (
                 <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="text-center font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3 rounded-xl">
@@ -264,7 +259,7 @@ export default function Index() {
                 <Sparkles className="w-4 h-4 text-blue-400" />
               </motion.div>
               <span className="text-white text-[11px] font-bold tracking-widest uppercase">
-                r u good? <span className="text-blue-400">AI Engine v2.0</span>
+                r u good? <span className="text-blue-400">Safety Engine v2.0</span>
               </span>
             </motion.div>
 
@@ -276,10 +271,10 @@ export default function Index() {
             >
               Your{" "}
               <GlowText className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                AI-Powered
+                Safety
               </GlowText>
               <br />
-              Safety Check-In
+               Check-In
             </motion.h1>
 
             <motion.p
@@ -288,8 +283,8 @@ export default function Index() {
               transition={{ delay: 0.5 }}
               className="text-gray-400 text-lg leading-relaxed max-w-md text-center lg:text-left"
             >
-              Intelligent SMS check-ins with automated escalation. Stay connected with the people who matter most — gracefully and securely.
-            </motion.p>
+If something happened to you today… how long would it take for someone to notice?”
+   With RU Good… Within hours.            </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -361,7 +356,7 @@ export default function Index() {
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 </motion.div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-medium">AI Analysis</p>
+                  <p className="text-[10px] text-gray-400 font-medium">Safety Analysis</p>
                   <p className="text-xs font-bold text-white">Mum is Okay</p>
                 </div>
               </div>
@@ -380,7 +375,7 @@ export default function Index() {
                 <p className="text-xs font-bold text-white">Reminder Sent</p>
               </div>
               <p className="text-[10px] text-gray-400 leading-relaxed">
-                No response in 30 min — AI dispatched reminder automatically.
+                No response in 30 min — Safety Engine dispatched reminder automatically.
               </p>
             </motion.div>
 
@@ -422,7 +417,7 @@ export default function Index() {
                         r u good?
                       </p>
                       <h3 className="text-white text-xl font-bold leading-tight mb-1">
-                        AI Check-In
+                        Safety Check-In
                       </h3>
                       <p className="text-gray-400 text-xs mb-6">
                         Are you safe today?<br />
@@ -453,7 +448,7 @@ export default function Index() {
                           >
                             <Sparkles className="w-2.5 h-2.5 text-blue-400" />
                             <span className="text-[9px] text-blue-300 font-medium tracking-wide">
-                              AI: Positive Sentiment
+                              Positive Sentiment
                             </span>
                           </motion.div>
                         </div>
@@ -461,7 +456,7 @@ export default function Index() {
                     </div>
                     <div className="px-5 pb-5">
                       <div className="bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-white text-center text-xs font-semibold py-2.5 rounded-2xl border border-white/10">
-                        Check-in Complete • AI Logged
+                        Check-in Complete •  Logged
                       </div>
                     </div>
                   </div>
@@ -477,7 +472,7 @@ export default function Index() {
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
             { value: "99.9%", label: "Uptime Reliability", icon: Gauge },
-            { value: "24/7", label: "AI Monitoring", icon: Radar },
+            { value: "24/7", label: "Safety Monitoring", icon: Radar },
             { value: "15k+", label: "Check-ins Sent", icon: Activity },
             { value: "< 1min", label: "Alert Response", icon: Zap },
           ].map((s, i) => (
@@ -512,7 +507,7 @@ export default function Index() {
             >
               <Cpu className="w-4 h-4 text-blue-400" />
               <span className="text-blue-400 text-[11px] font-bold tracking-widest uppercase">
-                Powered by Advanced AI
+                Powered by Advanced Safety Engine
               </span>
             </motion.div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
@@ -522,7 +517,7 @@ export default function Index() {
               </span>
             </h2>
             <p className="text-gray-400 mt-4 text-lg max-w-2xl mx-auto">
-              Our proprietary AI engine doesn't just send automated texts — it analyzes responses, detects nuanced emergencies, and routes alerts with zero latency.
+              Our proprietary Safety engine  doesn't just send automated texts — it analyzes responses, detects nuanced emergencies, and routes alerts with zero latency.
             </p>
           </div>
 
@@ -531,7 +526,7 @@ export default function Index() {
               {
                 icon: Activity,
                 title: "Sentiment & Tone Analysis",
-                desc: "The AI instantly analyzes incoming replies. If a loved one responds with 'I don't feel well' instead of just 'NO', the system immediately flags the check-in for emergency escalation.",
+                desc: "We instantly analyze incoming replies. If a loved one responds with 'I don't feel well' instead of just 'NO', the system immediately flags the check-in for emergency escalation.",
                 gradient: "from-blue-500/20 to-cyan-500/20",
               },
               {
@@ -543,7 +538,7 @@ export default function Index() {
               {
                 icon: Eye,
                 title: "Predictive Anomaly Detection",
-                desc: "By learning daily routines, the AI can detect unusual patterns in response times and proactively notify you before a missed check-in even occurs.",
+                desc: "By learning daily routines, our Safety Engine can detect unusual patterns in response times and proactively notify you before a missed check-in even occurs.",
                 gradient: "from-green-500/20 to-emerald-500/20",
               },
             ].map((feature, i) => (
@@ -575,7 +570,7 @@ export default function Index() {
               How it works
             </span>
             <h2 className="text-4xl font-extrabold text-white mt-3">
-              Simple. Reliable. <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">AI-Powered.</span>
+              Simple. Reliable. <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Safety-Focused.</span>
             </h2>
             <p className="text-gray-400 mt-3 text-lg">
               Three steps to peace of mind for you and your family.
@@ -668,7 +663,7 @@ export default function Index() {
       </section>
 
       {/* ── AI INSIGHTS SECTION (New) ── */}
-      <section id="ai-insights" className="py-24 bg-black relative overflow-hidden">
+      <section id="safety-insights" className="py-24 bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.1),transparent_70%)]" />
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.div
@@ -679,7 +674,7 @@ export default function Index() {
           >
             <BarChart3 className="w-4 h-4 text-blue-400" />
             <span className="text-blue-400 text-[11px] font-bold tracking-widest uppercase">
-              Real-time AI Insights
+              Real-time Safety Insights
             </span>
           </motion.div>
           <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
@@ -696,7 +691,7 @@ export default function Index() {
               <Radar className="w-12 h-12 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Anomaly Detection</h3>
               <p className="text-gray-400">
-                Our AI learns daily patterns and alerts you when something's off — before it becomes an emergency.
+                Our Safety Engine learns daily patterns and alerts you when something's off — before it becomes an emergency.
               </p>
             </motion.div>
             <motion.div
@@ -706,7 +701,7 @@ export default function Index() {
               <Brain className="w-12 h-12 text-purple-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Sentiment Analysis</h3>
               <p className="text-gray-400">
-                AI analyzes response tones to detect stress, anxiety, or urgency — providing deeper insights.
+                We analyze response tones to detect stress, anxiety, or urgency — providing deeper insights.
               </p>
             </motion.div>
           </div>
@@ -751,8 +746,8 @@ export default function Index() {
                   "Daily automated safety check-ins",
                   "Instant SMS & Voice Call escalation",
                   "Triple emergency contact routing",
-                  "AI sentiment & safety analysis",
-                  "24/7 automated AI monitoring",
+                  "Sentiment & safety analysis",
+                  "24/7 automated safety monitoring",
                   "Cancel anytime",
                 ].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
@@ -793,7 +788,7 @@ export default function Index() {
               </div>
 
               <p className="text-gray-400 text-lg leading-relaxed max-w-md font-medium">
-                Redefining personal safety through <span className="text-white">intelligent AI automation</span>.
+                Redefining personal safety through <span className="text-white">intelligent automation</span>.
                 Keep your loved ones informed, always.
               </p>
 

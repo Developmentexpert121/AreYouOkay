@@ -79,7 +79,7 @@ export function AppSidebar() {
           </motion.div>
           <div className="flex flex-col">
             <span className="text-white font-extrabold text-base leading-tight">r u good?</span>
-            <span className="text-xs text-blue-400 font-semibold tracking-wide">AI Safety</span>
+            <span className="text-xs text-blue-400 font-semibold tracking-wide">Safety Check-In</span>
           </div>
         </div>
 
