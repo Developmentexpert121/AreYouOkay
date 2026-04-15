@@ -118,10 +118,12 @@ async def twilio_voice_emergency(request: Request):
     user_id = request.query_params.get("user_id", "")
     checkin_id = request.query_params.get("checkin_id", "")
 
+    base_url = os.getenv("APP_BASE_URL", "https://orca-app-8rqa7.ondigitalocean.app/api")
+    
     response = VoiceResponse()
     gather = response.gather(
         num_digits=1,
-        action=f"gather/emergency?user_id={user_id}&checkin_id={checkin_id}",
+        action=f"{base_url}/webhook/twilio/gather/emergency?user_id={user_id}&checkin_id={checkin_id}",
         method="POST",
         timeout=10
     )
@@ -196,13 +198,13 @@ async def twilio_voice(request: Request):
     user_id = request.query_params.get("user_id", "")
     checkin_id = request.query_params.get("checkin_id", "")
 
+    base_url = os.getenv("APP_BASE_URL", "https://orca-app-8rqa7.ondigitalocean.app/api")
+
     response = VoiceResponse()
     
-    # We need an absolute URL for the gather action if possible, 
-    # but Twilio supports relative URLs if they hit this endpoint directly.
     gather = response.gather(
         num_digits=1,
-        action=f"gather?user_id={user_id}&checkin_id={checkin_id}",
+        action=f"{base_url}/webhook/twilio/gather?user_id={user_id}&checkin_id={checkin_id}",
         method="POST",
         timeout=10
     )

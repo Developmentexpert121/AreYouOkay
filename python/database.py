@@ -11,10 +11,12 @@ else:
     if db_url and db_url.startswith("${"):
         print(f"⚠️ WARNING: DATABASE_URL looks like an un-interpolated string: '{db_url}'")
         print("Check your DigitalOcean App Settings. Do not manually enter ${...} as the value.")
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+    db_dir = os.path.dirname(__file__)
+    db_path = os.path.join(db_dir, "sql_app.db")
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
 
 # Debug logging (safe)
-print(f"DATABASE_URL protocol: {SQLALCHEMY_DATABASE_URL.split(':', 1)[0]}, length: {len(SQLALCHEMY_DATABASE_URL)}")
+print(f"DATABASE_URL protocol: {SQLALCHEMY_DATABASE_URL.split(':', 1)[0]}, path: {SQLALCHEMY_DATABASE_URL.split('sqlite:///', 1)[-1]}")
 
 # Fix for postgres:// issue (common in some hosting platforms)
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):

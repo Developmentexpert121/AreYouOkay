@@ -182,6 +182,52 @@ export default function Admin() {
           </div>
         </motion.div>
 
+        {/* Emergency Contacts */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 p-16 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+          <div className="flex items-center gap-2 mb-4 relative z-10">
+            <PhoneCall className="w-5 h-5 text-red-400" />
+            <h3 className="font-bold text-white text-lg">Emergency Contacts</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+            {selectedUser.emergency_contact_name && (
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                <span className="block text-gray-400 mb-1 text-sm">Primary Contact:</span>
+                <span className="font-semibold text-white text-base">{selectedUser.emergency_contact_name}</span>
+                {selectedUser.emergency_contact_phone && (
+                  <span className="block text-gray-300 text-sm mt-1">{selectedUser.emergency_contact_phone}</span>
+                )}
+              </div>
+            )}
+            {selectedUser.emergency_contact_name_2 && (
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                <span className="block text-gray-400 mb-1 text-sm">Secondary Contact:</span>
+                <span className="font-semibold text-white text-base">{selectedUser.emergency_contact_name_2}</span>
+                {selectedUser.emergency_contact_phone_2 && (
+                  <span className="block text-gray-300 text-sm mt-1">{selectedUser.emergency_contact_phone_2}</span>
+                )}
+              </div>
+            )}
+            {selectedUser.emergency_contact_name_3 && (
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                <span className="block text-gray-400 mb-1 text-sm">Tertiary Contact:</span>
+                <span className="font-semibold text-white text-base">{selectedUser.emergency_contact_name_3}</span>
+                {selectedUser.emergency_contact_phone_3 && (
+                  <span className="block text-gray-300 text-sm mt-1">{selectedUser.emergency_contact_phone_3}</span>
+                )}
+              </div>
+            )}
+            {(!selectedUser.emergency_contact_name && !selectedUser.emergency_contact_name_2 && !selectedUser.emergency_contact_name_3) && (
+              <div className="col-span-full text-center text-gray-500 py-8">
+                No emergency contacts configured
+              </div>
+            )}
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Check-in History */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">

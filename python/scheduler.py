@@ -62,13 +62,28 @@ def check_and_send_messages():
                 tz = pytz.utc
 
             local_time = now_utc.replace(tzinfo=pytz.utc).astimezone(tz)
-            current_hm = local_time.strftime("%H:%M")
+            
+            try:
+                hour_str, minute_str = user.check_in_time.split(":")
+                target_hour, target_minute = int(hour_str), int(minute_str)
+            except Exception:
+                target_hour, target_minute = 9, 0  # Fallback
+            
+            target_local_dt = local_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
 
-            if current_hm >= user.check_in_time:
-                today_start = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            if local_time >= target_local_dt:
+                # Boundaries of the user's current local day
+                local_midnight = local_time.replace(hour=0, minute=0, second=0, microsecond=0)
+                local_next_midnight = local_midnight + timedelta(days=1)
+                
+                # Convert boundaries to UTC to query DB
+                utc_midnight = local_midnight.astimezone(pytz.utc).replace(tzinfo=None)
+                utc_next_midnight = local_next_midnight.astimezone(pytz.utc).replace(tzinfo=None)
+
                 existing = db.query(models.CheckInTrack).filter(
                     models.CheckInTrack.user_id == user.id,
-                    models.CheckInTrack.scheduled_for >= today_start
+                    models.CheckInTrack.scheduled_for >= utc_midnight,
+                    models.CheckInTrack.scheduled_for < utc_next_midnight
                 ).first()
 
                 if not existing:
@@ -172,48 +187,20 @@ def escalations_check():
                     ok = _send_sms(client, phone_to_send, body)
                     _log_alert(db, user.id, checkin.id, "reminder", user.name, phone_to_send, body, ok)
 
-            # --- T+Reminder Delay + 60 mins: Send voice call to user ---
-            elif checkin.status == "reminded" and elapsed_mins >= reminder_delay + 60:
-                checkin.status = "user_voice_called"
-                db.commit()
-                if client and user.phone_number:
-                    base_url = os.getenv("APP_BASE_URL", "https://orca-app-8rqa7.ondigitalocean.app/api")
-                    try:
-                        client.calls.create(
-                            to=str(user.phone_number).replace(" ", ""),
-                            from_=TWILIO_PHONE_NUMBER,
-                            url=f"{base_url}/webhook/twilio/voice?user_id={user.id}&checkin_id={checkin.id}"
-                        )
-                        _log_alert(db, user.id, checkin.id, "user_voice_call", user.name, user.phone_number, "Initiating automated voice call to user.", True)
-                    except Exception as e:
-                        print(f"Failed user voice call: {e}")
-
             # --- Step 1: Contact 1 SMS ---
-            elif checkin.status == "user_voice_called" and elapsed_mins >= reminder_delay + escalation_delay:
+            elif checkin.status == "reminded" and elapsed_mins >= reminder_delay + escalation_delay:
                 escalate_sms_to_contact(db, client, user, checkin, user.emergency_contact_name, user.emergency_contact_phone, "escalated_1_sms", "escalated_1_sms")
-                
-            # --- Step 1: Contact 1 Voice --- 15 mins after SMS
-            elif checkin.status == "escalated_1_sms" and elapsed_mins >= reminder_delay + escalation_delay + 15:
-                escalate_voice_to_contact(db, client, user, checkin, user.emergency_contact_name, user.emergency_contact_phone, "escalated_1_voice", "escalated_1_voice")
 
             # --- Step 2: Contact 2 SMS --- 120 mins after Contact 1 SMS
-            elif checkin.status == "escalated_1_voice" and elapsed_mins >= reminder_delay + (2 * escalation_delay):
+            elif checkin.status == "escalated_1_sms" and elapsed_mins >= reminder_delay + (2 * escalation_delay):
                 escalate_sms_to_contact(db, client, user, checkin, user.emergency_contact_name_2, user.emergency_contact_phone_2, "escalated_2_sms", "escalated_2_sms")
                 
-            # --- Step 2: Contact 2 Voice --- 15 mins after SMS
-            elif checkin.status == "escalated_2_sms" and elapsed_mins >= reminder_delay + (2 * escalation_delay) + 15:
-                escalate_voice_to_contact(db, client, user, checkin, user.emergency_contact_name_2, user.emergency_contact_phone_2, "escalated_2_voice", "escalated_2_voice")
-                
             # --- Step 3: Contact 3 SMS --- 120 mins after Contact 2 SMS
-            elif checkin.status == "escalated_2_voice" and elapsed_mins >= reminder_delay + (3 * escalation_delay):
+            elif checkin.status == "escalated_2_sms" and elapsed_mins >= reminder_delay + (3 * escalation_delay):
                 escalate_sms_to_contact(db, client, user, checkin, user.emergency_contact_name_3, user.emergency_contact_phone_3, "escalated_3_sms", "escalated_3_sms")
                 
-            # --- Step 3: Contact 3 Voice --- 15 mins after SMS
-            elif checkin.status == "escalated_3_sms" and elapsed_mins >= reminder_delay + (3 * escalation_delay) + 15:
-                escalate_voice_to_contact(db, client, user, checkin, user.emergency_contact_name_3, user.emergency_contact_phone_3, "escalated_3_voice", "escalated_3_voice")
-
             # --- End of Line: Keep calling missed ---
-            elif checkin.status == "escalated_3_voice" and elapsed_mins >= reminder_delay + (4 * escalation_delay):
+            elif checkin.status == "escalated_3_sms" and elapsed_mins >= reminder_delay + (4 * escalation_delay):
                 checkin.status = "missed"
                 db.commit()
 

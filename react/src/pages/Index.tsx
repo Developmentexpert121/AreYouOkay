@@ -274,7 +274,7 @@ export default function Index() {
                 Safety
               </GlowText>
               <br />
-               Check-In
+              Check-In
             </motion.h1>
 
             <motion.p
@@ -283,8 +283,8 @@ export default function Index() {
               transition={{ delay: 0.5 }}
               className="text-gray-400 text-lg leading-relaxed max-w-md text-center lg:text-left"
             >
-If something happened to you today… how long would it take for someone to notice?”
-   With RU Good… Within hours.            </motion.p>
+              If something happened to you today… how long would it take for someone to notice?
+              With RU Good… Within hours.            </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}

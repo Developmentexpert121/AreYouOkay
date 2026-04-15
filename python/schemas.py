@@ -37,7 +37,7 @@ class PasswordResetConfirm(BaseModel):
 
 class UserResponse(UserBase):
     id: int
-    subscription_status: str
+    subscription_status: Optional[str] = "inactive"
     profile_picture: Optional[str] = None
     email_verified: Optional[bool] = False
 

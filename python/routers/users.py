@@ -446,7 +446,13 @@ def get_admin_dashboard_users(skip: int = 0, limit: int = 100, db: Session = Dep
             "timezone": u.timezone,
             "status": "active" if u.subscription_status == "active" else "inactive",
             "checkins": completed,
-            "missed": missed
+            "missed": missed,
+            "emergency_contact_name": u.emergency_contact_name,
+            "emergency_contact_phone": u.emergency_contact_phone,
+            "emergency_contact_name_2": u.emergency_contact_name_2,
+            "emergency_contact_phone_2": u.emergency_contact_phone_2,
+            "emergency_contact_name_3": u.emergency_contact_name_3,
+            "emergency_contact_phone_3": u.emergency_contact_phone_3
         })
     return results
 

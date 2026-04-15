@@ -7,7 +7,7 @@ def purge_test_data():
         # Delete users with "Test" in name or the old admin email
         test_users = db.query(models.User).filter(
             (models.User.name.like("%Test%")) | 
-            (models.User.email == "developmentexpert121@gmail.com")
+            (models.User.email == "admin@gmail.com")
         ).all()
         
         for user in test_users:

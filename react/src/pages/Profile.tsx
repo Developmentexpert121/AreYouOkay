@@ -195,7 +195,7 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const isAdmin = user.email === "developmentexpert121@gmail.com";
+  const isAdmin = user.email === "admin@gmail.com";
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-16 pt-8 px-4 md:px-6 relative z-10 w-full">

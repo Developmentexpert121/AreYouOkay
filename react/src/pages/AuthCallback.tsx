@@ -29,7 +29,7 @@ export default function AuthCallback() {
           toast.success("Successfully authenticated with Google!");
           
           // Direct redirection to the correct landing page to avoid blank screen/double-nav issues
-          const isAdmin = user.email === "developmentexpert121@gmail.com";
+          const isAdmin = user.email === "admin@gmail.com";
           const isSubscribed = user.subscription_status === "active";
           
           if (isAdmin) {
@@ -49,7 +49,7 @@ export default function AuthCallback() {
             localStorage.setItem("user", JSON.stringify(user));
             toast.success("Successfully authenticated with Google!");
 
-            const isAdmin = user.email === "developmentexpert121@gmail.com";
+            const isAdmin = user.email === "admin@gmail.com";
             const isSubscribed = user.subscription_status === "active";
 
             if (isAdmin) {

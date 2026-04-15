@@ -31,7 +31,7 @@ const ProtectedRoute = ({ children, requireAdmin }: { children: React.ReactNode,
     localStorage.removeItem("user");
   }
   
-  const isAdmin = user?.email === "developmentexpert121@gmail.com";
+  const isAdmin = user?.email === "admin@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
   const userOnlyPaths = ["/dashboard", "/history", "/subscription", "/profile"];
   const adminOnlyPaths = ["/admin"];
@@ -75,7 +75,7 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
     user = null;
   }
   
-  const isAdmin = user?.email === "developmentexpert121@gmail.com";
+  const isAdmin = user?.email === "admin@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 
   if (user) {

@@ -67,6 +67,21 @@ def run_seed():
         else:
             print("OK: Test user already exists.")
 
+        # 4. SEED ADMIN USER
+        admin_email = "admin@gmail.com"
+        # Check if admin user exists
+        cur.execute("SELECT id FROM users WHERE email = %s;", (admin_email,))
+        if not cur.fetchone():
+            print(f"Seeding admin user: {admin_email}...")
+            hashed = hash_pw("123456@Ab")
+            cur.execute("""
+                INSERT INTO users (name, email, hashed_password, email_verified, created_at)
+                VALUES (%s, %s, %s, %s, %s);
+            """, ("Admin User", admin_email, hashed, True, datetime.utcnow()))
+            print("SUCCESS: Admin user added (Password: 123456@Ab)")
+        else:
+            print("OK: Admin user already exists.")
+
         print("\n=== DATABASE SEEDED AND FIXED! ===")
         cur.close()
         conn.close()

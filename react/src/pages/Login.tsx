@@ -73,7 +73,7 @@ export default function Login() {
       const searchParams = new URLSearchParams(window.location.search);
       const redirect = searchParams.get("redirect");
 
-      if (user.email === "developmentexpert121@gmail.com") {
+      if (user.email === "admin@gmail.com") {
         navigate("/admin");
       } else if (user.subscription_status === "active") {
         if (redirect === "checkout") {

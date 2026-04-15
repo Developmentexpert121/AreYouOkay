@@ -46,7 +46,7 @@ export function AppSidebar() {
 
   const savedUser = localStorage.getItem("user");
   const user = savedUser ? JSON.parse(savedUser) : null;
-  const isAdmin = user?.email === "developmentexpert121@gmail.com";
+  const isAdmin = user?.email === "admin@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 
   const isActive = (path: string) => location.pathname === path;
