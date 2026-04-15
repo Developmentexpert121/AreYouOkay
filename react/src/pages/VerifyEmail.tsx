@@ -81,7 +81,7 @@ export default function VerifyEmail() {
       localStorage.setItem("user", JSON.stringify(data));
       toast.success("Email verified! Welcome 🎉");
 
-      if (data.email === "developmentexpert121@gmail.com") {
+      if (data.email === "admin@gmail.com") {
         navigate("/admin");
       } else if (data.subscription_status === "active") {
         navigate("/dashboard");
