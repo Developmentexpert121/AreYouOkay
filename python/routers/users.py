@@ -543,6 +543,7 @@ def delete_avatar(user_id: int, db: Session = Depends(database.get_db)):
 @router.delete("/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(database.get_db)):
     """Delete a user and all their associated check-ins and alert logs."""
+    print(f"[ADMIN ACTION] Delete user request received for user_id={user_id}")
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -551,12 +552,14 @@ def delete_user(user_id: int, db: Session = Depends(database.get_db)):
     db.query(models.CheckInTrack).filter(models.CheckInTrack.user_id == user_id).delete()
     db.delete(user)
     db.commit()
+    print(f"[ADMIN ACTION] Deleted user_id={user_id}")
     return {"message": f"User {user_id} deleted successfully"}
 
 
 @router.put("/{user_id}/suspend")
 def suspend_user(user_id: int, db: Session = Depends(database.get_db)):
     """Toggle a user's subscription between active and inactive (suspend/unsuspend)."""
+    print(f"[ADMIN ACTION] Suspend toggle request received for user_id={user_id}")
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -564,4 +567,5 @@ def suspend_user(user_id: int, db: Session = Depends(database.get_db)):
     user.subscription_status = "inactive" if user.subscription_status == "active" else "active"
     db.commit()
     db.refresh(user)
+    print(f"[ADMIN ACTION] user_id={user_id} subscription_status={user.subscription_status}")
     return {"id": user.id, "name": user.name, "subscription_status": user.subscription_status}

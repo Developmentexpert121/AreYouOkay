@@ -105,14 +105,15 @@ export default function Admin() {
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} User?`,
       description: `Are you sure you want to ${action} ${user.name}? This will affect their ability to receive check-ins.`,
       action: async () => {
-        try {
-          const res = await fetch(`${API}/users/${user.id}/suspend`, { method: "PUT" });
-          if (!res.ok) throw new Error("Failed");
-          toast.success(`User ${action}ed successfully`);
-          fetchData();
-          if (selectedUser?.id === user.id) setSelectedUser({ ...selectedUser, status: user.status === "active" ? "inactive" : "active" });
-        } catch {
-          toast.error(`Failed to ${action} user`);
+        const res = await fetch(`${API}/users/${user.id}/suspend`, { method: "PUT" });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || data.message || "Failed to update user");
+        }
+        toast.success(`User ${action}ed successfully`);
+        await fetchData();
+        if (selectedUser?.id === user.id) {
+          setSelectedUser({ ...selectedUser, status: data.subscription_status === "active" ? "active" : "inactive" });
         }
       }
     });
@@ -125,15 +126,16 @@ export default function Admin() {
       description: `Caution: This will permanently delete ${user.name} and all their history. This action cannot be undone.`,
       destructive: true,
       action: async () => {
-        try {
-          const res = await fetch(`${API}/users/${user.id}`, { method: "DELETE" });
-          if (!res.ok) throw new Error("Failed");
-          toast.success("User deleted successfully");
-          if (selectedUser?.id === user.id) setSelectedUser(null);
-          fetchData();
-        } catch {
-          toast.error("Failed to delete user");
+        const res = await fetch(`${API}/users/${user.id}`, { method: "DELETE" });
+        const data = await res.text();
+        if (!res.ok) {
+          throw new Error(data || "Failed to delete user");
         }
+        toast.success("User deleted successfully");
+        if (selectedUser?.id === user.id) {
+          setSelectedUser(null);
+        }
+        await fetchData();
       }
     });
   };
@@ -145,7 +147,8 @@ export default function Admin() {
 
   if (selectedUser) {
     return (
-      <div className="max-w-6xl mx-auto space-y-8 relative z-10 w-full pt-8 px-4 md:px-6 pb-16">
+      <>
+        <div className="max-w-6xl mx-auto space-y-8 relative z-10 w-full pt-8 px-4 md:px-6 pb-16">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <Button variant="ghost" className="gap-2 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => setSelectedUser(null)}>
             <ArrowLeft className="w-4 h-4" /> Back to users
@@ -289,7 +292,52 @@ export default function Admin() {
             </div>
           </motion.div>
         </div>
-      </div>
+        </div>
+        <AlertDialog open={confirmDialog.open} onOpenChange={(o) => setConfirmDialog(p => ({ ...p, open: o }))}>
+        <AlertDialogContent className="bg-[#0a0a0b] border border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden max-w-md shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none ${confirmDialog.destructive ? "bg-red-500/10" : "bg-blue-500/10"}`} />
+          
+          <div className="p-10 relative z-10">
+            <AlertDialogHeader className="space-y-4">
+              <AlertDialogTitle className="text-3xl font-extrabold flex items-center gap-4 tracking-tight">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border ${confirmDialog.destructive 
+                  ? "bg-red-500/10 text-red-500 border-red-500/20" 
+                  : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                {confirmDialog.title}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400 text-lg leading-relaxed pt-2 font-medium">
+                {confirmDialog.description}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <AlertDialogFooter className="mt-10 flex-col sm:flex-col gap-3">
+              <AlertDialogAction
+                onClick={async (e) => {
+                  e.preventDefault();
+                  try {
+                    await confirmDialog.action();
+                  } catch (error) {
+                    console.error(error);
+                  }
+                  setConfirmDialog(p => ({ ...p, open: false }));
+                }}
+                className={`w-full h-14 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98] ${confirmDialog.destructive
+                  ? "bg-red-500 hover:bg-red-600 text-white shadow-red-500/20"
+                  : "bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 text-white shadow-blue-500/20"
+                  }`}
+              >
+                Confirm Action
+              </AlertDialogAction>
+              <AlertDialogCancel className="w-full h-14 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white font-bold text-lg border-0 transition-all">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+      </>
     );
   }
 
@@ -482,7 +530,6 @@ export default function Admin() {
           </div>
         </motion.div>
       )}
-      {/* Global Confirmation Dialog */}
       <AlertDialog open={confirmDialog.open} onOpenChange={(o) => setConfirmDialog(p => ({ ...p, open: o }))}>
         <AlertDialogContent className="bg-[#0a0a0b] border border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden max-w-md shadow-[0_0_50px_rgba(0,0,0,0.5)]">
           <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none ${confirmDialog.destructive ? "bg-red-500/10" : "bg-blue-500/10"}`} />
@@ -504,9 +551,13 @@ export default function Admin() {
             
             <AlertDialogFooter className="mt-10 flex-col sm:flex-col gap-3">
               <AlertDialogAction
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
-                  confirmDialog.action();
+                  try {
+                    await confirmDialog.action();
+                  } catch (error) {
+                    console.error(error);
+                  }
                   setConfirmDialog(p => ({ ...p, open: false }));
                 }}
                 className={`w-full h-14 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98] ${confirmDialog.destructive
