@@ -43,24 +43,39 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
     from_number = form_data.get("From", "")
     body = form_data.get("Body", "").strip().upper()
 
-    user = db.query(models.User).filter(models.User.phone_number == from_number).first()
-    if user:
-        checkin = db.query(models.CheckInTrack).filter(
-            models.CheckInTrack.user_id == user.id,
-            models.CheckInTrack.status.notin_(["completed", "missed", "emergency_acknowledged"])
-        ).order_by(models.CheckInTrack.scheduled_for.desc()).first()
+    from sqlalchemy import func
+    from_number_clean = from_number.replace(" ", "")
 
-        if checkin:
-            if body in ("YES", "Y"):
-                previous_status = checkin.status   # capture before update
-                checkin.status = "completed"
-                checkin.responded_at = datetime.utcnow()
-                db.commit()
-                
-                # Send the celebration emoji explicitly requested by user
-                if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and user.phone_number:
-                    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-                    _send_sms(client, str(user.phone_number).replace(" ", ""), "🥳")
+    # Search for an active check-in where the sender is either the user or their emergency contact
+    checkin = db.query(models.CheckInTrack).join(models.User).filter(
+        (func.replace(models.User.phone_number, " ", "") == from_number_clean) |
+        (func.replace(models.User.emergency_contact_phone, " ", "") == from_number_clean) |
+        (func.replace(models.User.emergency_contact_phone_2, " ", "") == from_number_clean) |
+        (func.replace(models.User.emergency_contact_phone_3, " ", "") == from_number_clean)
+    ).filter(
+        models.CheckInTrack.status.notin_(["completed", "missed", "emergency_acknowledged"])
+    ).order_by(models.CheckInTrack.scheduled_for.desc()).first()
+
+    if checkin:
+        user = checkin.user # SQLAlchemy join gives access to user
+        if body in ("YES", "Y"):
+            previous_status = checkin.status
+            checkin.status = "completed"
+            checkin.responded_at = datetime.utcnow()
+            db.commit()
+            
+            # Identify who replied
+            is_user_reply = from_number_clean == (user.phone_number or "").replace(" ", "")
+            
+            # Send celebration emoji only if the USER themselves replied
+            if is_user_reply and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and user.phone_number:
+                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+                _send_sms(client, str(user.phone_number).replace(" ", ""), "🥳")
+            
+            # If an emergency contact replied, log it specifically
+            if not is_user_reply:
+                _log_alert(db, user.id, checkin.id, "emergency_resolved_by_contact", 
+                           "Emergency Contact", from_number, "Emergency contact confirmed safety via SMS.", True)
 
                 # If the check-in was already escalated, send a False Alarm notice to emergency contact
                 escalated_statuses = {

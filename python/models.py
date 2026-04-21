@@ -26,8 +26,8 @@ class User(Base):
     profile_picture = Column(String, nullable=True)
 
     # Configurable escalation delays (minutes)
-    reminder_delay_minutes = Column(Integer, default=30)
-    escalation_delay_minutes = Column(Integer, default=60)
+    reminder_delay_minutes = Column(Integer, default=360) # 6 hours
+    escalation_delay_minutes = Column(Integer, default=120) # 2 hours
 
     reset_token = Column(String, nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)

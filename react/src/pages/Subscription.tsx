@@ -6,23 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/components/StatusBadge";
 import { API_BASE_URL } from "@/lib/api-config";
 import { motion } from "framer-motion";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const features = [
-  "Daily automated safety check-ins",
-  "Instant SMS & Voice Call escalation",
-  "Triple emergency contact routing",
-  "Sentiment & safety analysis",
-  "24/7 automated safety monitoring",
+  "Unlimited automated check-ins",
+  "Instant SMS & Email escalation",
+  "Multi-contact emergency routing",
+  "Detailed daily AI activity logs",
+  "Priority 24/7 technical support",
 ];
 
 export default function Subscription() {
@@ -30,7 +20,6 @@ export default function Subscription() {
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -48,9 +37,14 @@ export default function Subscription() {
 
     setLoading(true);
     try {
-      window.location.href = `https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
+      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}&origin=${encodeURIComponent(window.location.origin)}`, {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
+      window.location.href = data.url;
     } catch (err: any) {
-      toast.error("Failed to navigate to checkout.");
+      toast.error(err.message);
       setLoading(false);
     }
   };
@@ -83,7 +77,7 @@ export default function Subscription() {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       };
-      
+
       if (user) {
         verifySession();
       }
@@ -98,6 +92,7 @@ export default function Subscription() {
 
 
   const handleCancel = async () => {
+    if (!window.confirm("Are you sure you want to cancel your subscription? You will lose access to all Pro features immediately.")) return;
     setCancelling(true);
     try {
       const res = await fetch(`${API_BASE_URL}/stripe/cancel-subscription?user_id=${user.id}`, {
@@ -113,7 +108,6 @@ export default function Subscription() {
       toast.error(err.message);
     } finally {
       setCancelling(false);
-      setShowCancelDialog(false);
     }
   };
 
@@ -161,7 +155,9 @@ export default function Subscription() {
                 You're fully protected.
               </h2>
 
-                Your automated safety engine is active. You have access to daily automated check-ins, instant SMS & Voice Call escalation, and triple contact routing.
+              <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+                Your automated safety engine is active. You have access to unlimited check-ins, instant voice call escalation, and multi-contact routing.
+              </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/10">
                 {features.map((feature, idx) => (
@@ -197,15 +193,15 @@ export default function Subscription() {
                 </div>
               </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full h-12 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 font-bold gap-2 transition-all mt-4"
-                  onClick={() => setShowCancelDialog(true)}
-                  disabled={cancelling}
-                >
-                  {cancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {cancelling ? "Processing..." : "Cancel Subscription"}
-                </Button>
+              <Button
+                variant="outline"
+                className="w-full h-12 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 font-bold gap-2 transition-all mt-4"
+                onClick={handleCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {cancelling ? "Processing..." : "Cancel Subscription"}
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -250,7 +246,7 @@ export default function Subscription() {
                   <p className="text-sm font-bold text-blue-400">Limited Coverage</p>
                 </div>
                 <p className="text-xs text-blue-300/70 leading-relaxed relative z-10">
-                  You are currently unmonitored. Upgrade to Pro for full-scale automated emergency escalation and scheduled check-ins.
+                  You are currently unmonitored. Upgrade to Pro for full-scale AI emergency escalation and scheduled check-ins.
                 </p>
               </div>
             </motion.div>
@@ -277,7 +273,7 @@ export default function Subscription() {
                       <span className="text-xl font-medium text-gray-400">/mo</span>
                     </h2>
                     <p className="text-gray-400 font-medium mt-4 leading-relaxed max-w-sm">
-                      Complete peace of mind for you and your loved ones with our advanced automated safety engine.
+                      Complete peace of mind for you and your loved ones with our advanced automated AI safety engine.
                     </p>
                   </div>
 
@@ -290,12 +286,6 @@ export default function Subscription() {
                         {feature}
                       </li>
                     ))}
-                    <li className="flex items-center gap-4 text-sm font-medium text-gray-300">
-                      <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 border border-blue-500/30 shadow-sm">
-                        <Check className="w-3.5 h-3.5" />
-                      </div>
-                      Cancel anytime
-                    </li>
                   </ul>
                 </div>
 
@@ -326,41 +316,6 @@ export default function Subscription() {
           </div>
         </div>
       )}
-
-      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent className="bg-[#0a0a0b] border border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden max-w-md shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none" />
-          
-          <div className="p-10 relative z-10">
-            <AlertDialogHeader className="space-y-4">
-              <AlertDialogTitle className="text-3xl font-extrabold flex items-center gap-4 tracking-tight">
-                <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 shadow-inner border border-red-500/20">
-                  <ShieldCheck className="w-7 h-7" />
-                </div>
-                Cancel Plan?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-gray-400 text-lg leading-relaxed pt-2 font-medium">
-                Are you sure you want to end your protection? You'll lose access to all premium safety features immediately.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            
-            <AlertDialogFooter className="mt-10 flex-col sm:flex-col gap-3">
-              <AlertDialogAction 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleCancel();
-                }}
-                className="w-full h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-lg transition-all shadow-[0_10px_20px_rgba(239,68,68,0.2)] hover:shadow-[0_15px_30px_rgba(239,68,68,0.3)] active:scale-[0.98]"
-              >
-                Confirm Cancellation
-              </AlertDialogAction>
-              <AlertDialogCancel className="w-full h-14 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white font-bold text-lg border-0 transition-all">
-                Keep My Protection
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

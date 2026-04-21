@@ -503,6 +503,9 @@ def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Dep
 
     update_data = user_update.dict(exclude_unset=True)
     for key, value in update_data.items():
+        # Normalize phone numbers by removing spaces
+        if key in ["phone_number", "emergency_contact_phone", "emergency_contact_phone_2", "emergency_contact_phone_3"] and value:
+            value = value.replace(" ", "")
         setattr(db_user, key, value)
 
     db.commit()
