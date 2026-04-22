@@ -54,8 +54,10 @@ const ProtectedRoute = ({ children, requireAdmin }: { children: React.ReactNode,
   }
 
   // Subscription check for regular users
-  const isOnSubscriptionPage = location.pathname === "/subscription";
-  if (!isSubscribed && !isOnSubscriptionPage) {
+  const restrictedPaths = ["/dashboard", "/history", "/profile"];
+  const isRestrictedPath = restrictedPaths.includes(location.pathname);
+  
+  if (!isSubscribed && isRestrictedPath) {
     return <Navigate to="/subscription" replace />;
   }
 

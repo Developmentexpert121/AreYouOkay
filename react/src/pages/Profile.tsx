@@ -55,8 +55,19 @@ export default function Profile() {
 
       const parsePhone = (fullPhone: string) => {
         if (!fullPhone) return { code: "+1", num: "" };
+        
+        // Try to match against our known country codes first
+        for (const c of countryCodes) {
+          if (fullPhone.startsWith(c.code)) {
+            const num = fullPhone.slice(c.code.length).trim();
+            return { code: c.code, num };
+          }
+        }
+        
+        // Fallback: try to find any +digits pattern
         const match = fullPhone.match(/^(\+\d+)\s*(.*)$/);
         if (match) return { code: match[1], num: match[2] };
+        
         return { code: "+1", num: fullPhone };
       };
 
@@ -89,22 +100,22 @@ export default function Profile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation: 10 digits only
+    // Validation: 7 to 15 digits for international support
     const validatePhone = (num: string) => {
       const cleaned = num.replace(/\D/g, "");
-      return cleaned.length === 10;
+      return cleaned.length >= 7 && cleaned.length <= 15;
     };
 
     if (!validatePhone(formData.phone_number)) {
-      toast.error("Your phone number must be exactly 10 digits");
+      toast.error("Your phone number must be between 7 and 15 digits");
       return;
     }
     if (!validatePhone(formData.emergency_contact_phone)) {
-      toast.error("Emergency contact phone must be exactly 10 digits");
+      toast.error("Emergency contact phone must be between 7 and 15 digits");
       return;
     }
     if (formData.emergency_contact_phone_2 && !validatePhone(formData.emergency_contact_phone_2)) {
-      toast.error("Secondary contact phone must be exactly 10 digits");
+      toast.error("Secondary contact phone must be between 7 and 15 digits");
       return;
     }
 
@@ -135,6 +146,21 @@ export default function Profile() {
       const mergedUser = { ...user, ...updatedUser };
       localStorage.setItem("user", JSON.stringify(mergedUser));
       setUser(mergedUser);
+
+      // Re-parse to update the form fields immediately
+      const p1 = parsePhone(updatedUser.phone_number);
+      const p2 = parsePhone(updatedUser.emergency_contact_phone);
+      const p3 = parsePhone(updatedUser.emergency_contact_phone_2);
+
+      setFormData(prev => ({
+        ...prev,
+        phone_number: p1.num,
+        phone_code: p1.code,
+        emergency_contact_phone: p2.num,
+        emergency_contact_phone_code: p2.code,
+        emergency_contact_phone_2: p3.num,
+        emergency_contact_phone_code_2: p3.code,
+      }));
 
       toast.success("Profile updated successfully!");
     } catch (err: any) {
@@ -337,8 +363,9 @@ export default function Profile() {
                         <Input
                           id="phone_number"
                           value={formData.phone_number}
-                          onChange={(e) => setFormData({ ...formData, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                          className="h-12 pl-11 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl"
+                          onChange={(e) => setFormData({ ...formData, phone_number: e.target.value.slice(0, 20) })}
+                          placeholder="Enter phone number"
+                          className="h-12 pl-11 bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl"
                           required
                         />
                       </div>
@@ -399,9 +426,9 @@ export default function Profile() {
                         <Input
                           id="emergency_contact_phone"
                           value={formData.emergency_contact_phone}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                          placeholder="555 000 0000"
-                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
+                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value.slice(0, 20) })}
+                          placeholder="Contact phone number"
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
                           required
                         />
                       </div>
@@ -427,9 +454,9 @@ export default function Profile() {
                         <Input
                           id="emergency_contact_phone_2"
                           value={formData.emergency_contact_phone_2}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone_2: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                          placeholder="555 000 0000"
-                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
+                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone_2: e.target.value.slice(0, 20) })}
+                          placeholder="Secondary contact phone"
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
                         />
                       </div>
                     </div>

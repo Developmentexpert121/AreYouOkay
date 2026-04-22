@@ -5,7 +5,18 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/components/StatusBadge";
 import { API_BASE_URL } from "@/lib/api-config";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const features = [
   "Unlimited automated check-ins",
@@ -44,7 +55,7 @@ export default function Subscription() {
       if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
       window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to start checkout");
       setLoading(null);
     }
   };
@@ -92,7 +103,6 @@ export default function Subscription() {
 
 
   const handleCancel = async () => {
-    if (!window.confirm("Are you sure you want to cancel your subscription? You will lose access to all Pro features immediately.")) return;
     setCancelling(true);
     try {
       const res = await fetch(`${API_BASE_URL}/stripe/cancel-subscription?user_id=${user.id}`, {
@@ -141,6 +151,7 @@ export default function Subscription() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="bg-white/5 backdrop-blur-xl border border-blue-500/30 rounded-3xl p-8 md:p-12 relative overflow-hidden group shadow-[0_0_40px_rgba(59,130,246,0.15)]"
+          style={{ willChange: "transform, opacity" }}
         >
           {/* Animated Glow */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-blue-500/20 via-purple-500/10 to-transparent rounded-full blur-3xl -mr-40 -mt-40 pointer-events-none" />
@@ -189,19 +200,43 @@ export default function Subscription() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400">Amount</span>
-                  <span className="font-bold text-white">$6.99 / mo</span>
+                  <span className="font-bold text-white">
+                    {user?.plan_type === 'annual' ? '$50 / yr' : '$6.99 / mo'}
+                  </span>
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                className="w-full h-12 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 font-bold gap-2 transition-all mt-4"
-                onClick={handleCancel}
-                disabled={cancelling}
-              >
-                {cancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {cancelling ? "Processing..." : "Cancel Subscription"}
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300 font-bold gap-2 transition-all mt-4"
+                    disabled={cancelling}
+                  >
+                    {cancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {cancelling ? "Processing..." : "Cancel Subscription"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-[#0f0f1e]/95 backdrop-blur-xl border border-white/10 text-white rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-2xl font-bold tracking-tight">Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400 text-base">
+                      You will lose access to all Pro features immediately. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-6 gap-3">
+                    <AlertDialogCancel className="h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white transition-all">
+                      Keep Subscription
+                    </AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleCancel}
+                      className="h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all shadow-lg shadow-red-600/20"
+                    >
+                      Yes, Cancel Subscription
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </motion.div>
@@ -218,6 +253,7 @@ export default function Subscription() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all flex flex-col"
+            style={{ willChange: "transform, opacity" }}
           >
             <div className="space-y-6 flex-1">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 text-gray-400 text-[10px] font-bold uppercase tracking-widest border border-white/10">
@@ -257,6 +293,7 @@ export default function Subscription() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-white/5 backdrop-blur-xl border border-blue-500/40 rounded-3xl p-8 relative overflow-hidden group hover:border-blue-500/60 transition-all flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.1)]"
+            style={{ willChange: "transform, opacity" }}
           >
             <div className="absolute top-0 right-0 p-6">
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">

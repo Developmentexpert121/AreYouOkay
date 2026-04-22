@@ -27,13 +27,24 @@ async def create_checkout_session(user_id: int, request: Request, plan: str = "m
 
     try:
         # Create or reuse stripe customer
-        if not user.stripe_customer_id:
+        customer_id = user.stripe_customer_id
+        
+        if customer_id:
+            try:
+                # Verify customer exists in the current account
+                stripe.Customer.retrieve(customer_id)
+            except stripe.error.InvalidRequestError:
+                # Customer not found in this account (likely account changed)
+                customer_id = None
+
+        if not customer_id:
             customer = stripe.Customer.create(
                 email=user.email,
                 name=user.name,
                 metadata={"user_id": str(user_id)}
             )
-            user.stripe_customer_id = customer.id
+            customer_id = customer.id
+            user.stripe_customer_id = customer_id
             db.commit()
 
         # Build the base URL
@@ -54,7 +65,7 @@ async def create_checkout_session(user_id: int, request: Request, plan: str = "m
             interval = 'month'
 
         checkout_session = stripe.checkout.Session.create(
-            customer=user.stripe_customer_id,
+            customer=customer_id,
             payment_method_types=['card'],
             line_items=[
                 {
@@ -74,7 +85,8 @@ async def create_checkout_session(user_id: int, request: Request, plan: str = "m
             mode='subscription',
             success_url=f'{base_url}/subscription?session_id={{CHECKOUT_SESSION_ID}}',
             cancel_url=f'{base_url}/subscription',
-            client_reference_id=str(user_id)
+            client_reference_id=str(user_id),
+            metadata={"plan": plan} # Save plan type in metadata
         )
         return {"id": checkout_session.id, "url": checkout_session.url}
     except Exception as e:
@@ -91,6 +103,7 @@ async def verify_session(session_id: str, db: Session = Depends(database.get_db)
             user = db.query(models.User).filter(models.User.id == int(user_id)).first()
             if user:
                 user.subscription_status = "active"
+                user.plan_type = session.metadata.get("plan", "monthly")
                 if session.subscription:
                     user.stripe_subscription_id = session.subscription
                 db.commit()
@@ -99,7 +112,8 @@ async def verify_session(session_id: str, db: Session = Depends(database.get_db)
                     "id": user.id,
                     "name": user.name,
                     "email": user.email,
-                    "subscription_status": user.subscription_status
+                    "subscription_status": user.subscription_status,
+                    "plan_type": user.plan_type
                 }}
         return {"status": "pending"}
     except Exception as e:
@@ -200,9 +214,10 @@ async def stripe_webhook(request: Request, db: Session = Depends(database.get_db
                 user = db.query(models.User).filter(models.User.id == int(user_id)).first()
                 if user:
                     user.subscription_status = "active"
+                    user.plan_type = session.get("metadata", {}).get("plan", "monthly")
                     if subscription_id:
                         user.stripe_subscription_id = subscription_id
                     db.commit()
-                    print(f"[Stripe] Checkout completed and subscription activated for user {user.email}")
+                    print(f"[Stripe] Checkout completed and subscription activated for user {user.email} (Plan: {user.plan_type})")
 
     return {"received": True}

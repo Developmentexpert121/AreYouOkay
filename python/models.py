@@ -21,6 +21,7 @@ class User(Base):
     emergency_contact_phone_3 = Column(String, nullable=True)
 
     subscription_status = Column(String, default="inactive")
+    plan_type = Column(String, nullable=True) # "monthly" or "annual"
     stripe_customer_id = Column(String, nullable=True)
     stripe_subscription_id = Column(String, nullable=True)
     profile_picture = Column(String, nullable=True)

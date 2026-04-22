@@ -56,8 +56,19 @@ export default function Dashboard() {
 
     const parsePhone = (fullPhone: string) => {
       if (!fullPhone) return { code: "+1", num: "" };
+      
+      // Try to match against our known country codes first
+      for (const c of countryCodes) {
+        if (fullPhone.startsWith(c.code)) {
+          const num = fullPhone.slice(c.code.length).trim();
+          return { code: c.code, num };
+        }
+      }
+      
+      // Fallback: try to find any +digits pattern
       const match = fullPhone.match(/^(\+\d+)\s*(.*)$/);
       if (match) return { code: match[1], num: match[2] };
+      
       return { code: "+1", num: fullPhone };
     };
 
@@ -108,22 +119,22 @@ export default function Dashboard() {
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation: 10 digits only
+    // Validation: 7 to 15 digits for international support
     const validatePhone = (num: string) => {
       const cleaned = num.replace(/\D/g, "");
-      return cleaned.length === 10;
+      return cleaned.length >= 7 && cleaned.length <= 15;
     };
 
     if (!validatePhone(profileForm.phone_number)) {
-      toast.error("Your phone number must be exactly 10 digits");
+      toast.error("Your phone number must be between 7 and 15 digits");
       return;
     }
     if (!validatePhone(profileForm.emergency_contact_phone)) {
-      toast.error("Emergency contact phone must be exactly 10 digits");
+      toast.error("Emergency contact phone must be between 7 and 15 digits");
       return;
     }
     if (profileForm.emergency_contact_phone_2 && !validatePhone(profileForm.emergency_contact_phone_2)) {
-      toast.error("Secondary contact phone must be exactly 10 digits");
+      toast.error("Secondary contact phone must be between 7 and 15 digits");
       return;
     }
 
@@ -147,6 +158,22 @@ export default function Dashboard() {
       const updatedUser = await res.json();
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      // Update local form state immediately
+      const p1 = parsePhone(updatedUser.phone_number);
+      const p2 = parsePhone(updatedUser.emergency_contact_phone);
+      const p3 = parsePhone(updatedUser.emergency_contact_phone_2);
+
+      setProfileForm(prev => ({
+        ...prev,
+        phone_number: p1.num,
+        phone_code: p1.code,
+        emergency_contact_phone: p2.num,
+        emergency_contact_phone_code: p2.code,
+        emergency_contact_phone_2: p3.num,
+        emergency_contact_phone_code_2: p3.code,
+      }));
+
       toast.success("Profile updated successfully!");
     } catch (err: any) {
       toast.error(err.message);
@@ -238,11 +265,11 @@ export default function Dashboard() {
                         </Select>
                         <div className="relative flex-1">
                           <Input
-                            placeholder="555 000 0000"
-                            maxLength={10}
+                            placeholder="Enter phone number"
+                            maxLength={20}
                             value={profileForm.phone_number}
-                            onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                            onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value.slice(0, 20) })}
+                            className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
                           />
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         </div>
@@ -304,11 +331,11 @@ export default function Dashboard() {
                           </Select>
                           <div className="relative flex-1">
                             <Input
-                              placeholder="555 000 0000"
-                              maxLength={10}
+                              placeholder="Contact phone number"
+                              maxLength={20}
                               value={profileForm.emergency_contact_phone}
-                              onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                              className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                              onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value.slice(0, 20) })}
+                              className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
                             />
                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           </div>
@@ -343,11 +370,11 @@ export default function Dashboard() {
                           </Select>
                           <div className="relative flex-1">
                             <Input
-                              placeholder="555 000 0000"
-                              maxLength={10}
+                              placeholder="Secondary contact phone"
+                              maxLength={20}
                               value={profileForm.emergency_contact_phone_2}
-                              onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone_2: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                              className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
+                              onChange={(e) => setProfileForm({ ...profileForm, emergency_contact_phone_2: e.target.value.slice(0, 20) })}
+                              className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 rounded-xl pl-10 font-medium focus-visible:ring-1 focus-visible:ring-blue-500"
                             />
                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           </div>

@@ -45,6 +45,7 @@ const Particles = () => {
             height: p.size,
             left: `${p.x}%`,
             top: `${p.y}%`,
+            willChange: "transform, opacity",
           }}
           animate={{
             y: [0, -30, 0],
@@ -121,13 +122,14 @@ export default function Index() {
     }
 
     try {
-      const stripeUrl = plan === 'annual' 
-        ? "https://buy.stripe.com/5kQfZh1LD2HAc3G8fN7Zu01"
-        : "https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00";
-      
-      window.location.href = `${stripeUrl}?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
+      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}&plan=${plan}&origin=${encodeURIComponent(window.location.origin)}`, {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
+      window.location.href = data.url;
     } catch (err: any) {
-      toast.error("Failed to navigate to checkout.");
+      toast.error(err.message || "Failed to navigate to checkout.");
     }
   };
 
@@ -231,7 +233,7 @@ export default function Index() {
               <stop offset="100%" stopColor="#a855f7" />
             </linearGradient>
           </defs>
-          {Array.from({ length: 20 }).map((_, i) => (
+          {Array.from({ length: 15 }).map((_, i) => (
             <motion.line
               key={i}
               x1={`${Math.random() * 100}%`}
@@ -240,9 +242,9 @@ export default function Index() {
               y2={`${Math.random() * 100}%`}
               stroke="url(#grad)"
               strokeWidth="0.5"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 0.3 }}
-              transition={{ duration: 2, delay: i * 0.1, repeat: Infinity, repeatType: "reverse" }}
+              style={{ willChange: "transform, opacity" }}
+              animate={{ opacity: [0.1, 0.3, 0.1] }}
+              transition={{ duration: 3 + Math.random() * 2, delay: i * 0.2, repeat: Infinity }}
             />
           ))}
         </svg>
