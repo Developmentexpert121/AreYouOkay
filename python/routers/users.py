@@ -404,8 +404,10 @@ async def login_google_callback(request: Request, db: Session = Depends(database
         return RedirectResponse(url=f"{frontend_url}/auth/callback?token={temp_token}")
         
     except Exception as e:
-        print(f"[OAuth Error]: {e}")
-        return RedirectResponse(url=f"{frontend_url}/login?error=Google_Auth_Failed")
+        import traceback
+        traceback.print_exc()
+        error_msg = str(e).replace(" ", "_")
+        return RedirectResponse(url=f"{frontend_url}/login?error=Google_Auth_Failed&details={error_msg}")
 
 
 @router.post("/exchange-token")
