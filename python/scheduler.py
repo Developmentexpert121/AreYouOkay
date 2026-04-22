@@ -70,26 +70,21 @@ def check_and_send_messages():
                 target_hour, target_minute = 9, 0  # Fallback
             
             target_local_dt = local_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+            target_utc_dt = target_local_dt.astimezone(pytz.utc).replace(tzinfo=None)
 
             if local_time >= target_local_dt:
-                # Boundaries of the user's current local day
-                local_midnight = local_time.replace(hour=0, minute=0, second=0, microsecond=0)
-                local_next_midnight = local_midnight + timedelta(days=1)
-                
-                # Convert boundaries to UTC to query DB
-                utc_midnight = local_midnight.astimezone(pytz.utc).replace(tzinfo=None)
-                utc_next_midnight = local_next_midnight.astimezone(pytz.utc).replace(tzinfo=None)
+                # Check if a check-in already exists for THIS SPECIFIC target time
+                # This allows re-triggering if the user changes their time to a later slot on the same day
 
                 existing = db.query(models.CheckInTrack).filter(
                     models.CheckInTrack.user_id == user.id,
-                    models.CheckInTrack.scheduled_for >= utc_midnight,
-                    models.CheckInTrack.scheduled_for < utc_next_midnight
+                    models.CheckInTrack.scheduled_for == target_utc_dt
                 ).first()
 
                 if not existing:
                     new_checkin = models.CheckInTrack(
                         user_id=user.id,
-                        scheduled_for=now_utc,
+                        scheduled_for=target_utc_dt,
                         status="pending",
                         reminder_sent=False
                     )
