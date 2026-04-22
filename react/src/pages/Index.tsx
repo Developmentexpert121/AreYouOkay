@@ -109,7 +109,7 @@ export default function Index() {
   const isAdmin = user?.email === "developmentexpert121@gmail.com";
   const isSubscribed = user?.subscription_status === "active";
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (plan: 'monthly' | 'annual' = 'monthly') => {
     if (!user) {
       navigate("/login?redirect=checkout");
       return;
@@ -121,7 +121,11 @@ export default function Index() {
     }
 
     try {
-      window.location.href = `https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
+      const stripeUrl = plan === 'annual' 
+        ? "https://buy.stripe.com/5kQfZh1LD2HAc3G8fN7Zu01"
+        : "https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00";
+      
+      window.location.href = `${stripeUrl}?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
     } catch (err: any) {
       toast.error("Failed to navigate to checkout.");
     }
@@ -283,8 +287,9 @@ export default function Index() {
               transition={{ delay: 0.5 }}
               className="text-gray-400 text-lg leading-relaxed max-w-md text-center lg:text-left"
             >
-              If something happened to you today… how long would it take for someone to notice?
-              With RU Good… Within hours.            </motion.p>
+              Feel safer now. If something happened to you today… how long would it take for someone to notice?
+              With RU Good… Within hours.
+            </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -305,14 +310,8 @@ export default function Index() {
                     to="/signup"
                     className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold px-7 py-3.5 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-sm"
                   >
-                    Start Free Trial <ArrowRight className="w-4 h-4" />
+                    Get Protected <ArrowRight className="w-4 h-4" />
                   </Link>
-                  {/* <Link
-                    to="/login"
-                    className="flex items-center justify-center gap-2 bg-white/10 border border-white/20 text-white font-semibold px-7 py-3.5 rounded-full hover:bg-white/20 transition-all text-sm"
-                  >
-                    View Demo
-                  </Link> */}
                 </>
               )}
             </motion.div>
@@ -710,64 +709,117 @@ export default function Index() {
 
       {/* ── PRICING (Glowing Card) ── */}
       <section id="pricing" className="py-24 bg-gradient-to-br from-black via-blue-950 to-black">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+        <div className="max-w-6xl mx-auto px-6 text-center">
           <span className="text-xs font-bold tracking-widest text-blue-400 uppercase">
             Pricing
           </span>
           <h2 className="text-4xl font-extrabold text-white mt-3 mb-4">
-            One simple plan. Total peace of mind.
+            Simple plans. Total peace of mind.
           </h2>
           <p className="text-gray-400 text-lg mb-12">
-            Everything included. No hidden fees. Cancel anytime.
+            Choose the protective plan that fits you best.
           </p>
 
-          <motion.div
-            {...fadeUp}
-            transition={{ delay: 0.2 }}
-            className="relative group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-            <div className="relative bg-black/80 backdrop-blur-xl rounded-3xl p-10 shadow-2xl max-w-md mx-auto border border-white/10">
-              <p className="text-gray-400 font-semibold text-sm mb-2">
-                Monthly Subscription
-              </p>
-              <div className="flex items-end justify-center gap-1 mb-1">
-                <span className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  $6.99
-                </span>
-                <span className="text-gray-400 mb-2">/month</span>
-              </div>
-              <p className="text-gray-500 text-sm mb-8">
-                Per user. All features included.
-              </p>
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Monthly Plan */}
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: 0.2 }}
+              className="relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+              <div className="relative h-full bg-black/80 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border border-white/10 flex flex-col">
+                <p className="text-gray-400 font-semibold text-sm mb-2">
+                  Monthly Protection
+                </p>
+                <div className="flex items-end justify-center gap-1 mb-1">
+                  <span className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    $6.99
+                  </span>
+                  <span className="text-gray-400 mb-2">/month</span>
+                </div>
+                <p className="text-gray-500 text-sm mb-8">
+                  Per user. Cancel anytime.
+                </p>
 
-              <ul className="text-left space-y-3 mb-8">
-                {[
-                  "Daily automated safety check-ins",
-                  "Instant SMS & Voice Call escalation",
-                  "Triple emergency contact routing",
-                  "Sentiment & safety analysis",
-                  "24/7 automated safety monitoring",
-                  "Cancel anytime",
-                ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={handleCheckout}
-                disabled={isSubscribed && !isAdmin}
-                className={`block w-full text-center font-bold py-3.5 rounded-2xl transition-all ${isSubscribed && !isAdmin
-                  ? "bg-white/10 text-gray-400 cursor-not-allowed border border-white/20"
-                  : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-xl hover:shadow-blue-500/30 cursor-pointer"
-                  }`}
-              >
-                {isAdmin ? "Manage Dashboard" : isSubscribed ? "Plan Active" : "Upgrade Now"}
-              </button>
-            </div>
-          </motion.div>
+                <ul className="text-left space-y-3 mb-8 flex-1">
+                  {[
+                    "Daily automated safety check-ins",
+                    "No app required - simple SMS",
+                    "Instant emergency contact routing",
+                    "Sentiment & safety analysis",
+                    "24/7 automated monitoring",
+                  ].map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleCheckout('monthly')}
+                  disabled={isSubscribed && !isAdmin}
+                  className={`block w-full text-center font-bold py-3.5 rounded-2xl transition-all ${isSubscribed && !isAdmin
+                    ? "bg-white/10 text-gray-400 cursor-not-allowed border border-white/20"
+                    : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-xl hover:shadow-blue-500/30 cursor-pointer"
+                    }`}
+                >
+                  {isAdmin ? "Manage Dashboard" : isSubscribed ? "Plan Active" : "Get Monthly Plan"}
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Annual Plan */}
+            <motion.div
+              {...fadeUp}
+              transition={{ delay: 0.3 }}
+              className="relative group scale-105 z-10"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity" />
+              <div className="relative h-full bg-black/90 backdrop-blur-xl rounded-3xl p-10 shadow-2xl border-2 border-blue-500/50 flex flex-col">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                  Best Deal Ever
+                </div>
+                <p className="text-gray-300 font-bold text-sm mb-2 mt-2">
+                  Annual Protection
+                </p>
+                <div className="flex items-end justify-center gap-1 mb-1">
+                  <span className="text-6xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    $50
+                  </span>
+                  <span className="text-gray-400 mb-2">/year</span>
+                </div>
+                <p className="text-blue-400 text-xs font-bold mb-8 uppercase tracking-wider">
+                  Save 40% vs monthly
+                </p>
+
+                <ul className="text-left space-y-3 mb-8 flex-1">
+                  {[
+                    "Everything in Monthly Plan",
+                    "Priority emergency alerts",
+                    "Guaranteed price protection",
+                    "Unlimited timezone changes",
+                    "Premium family support link",
+                  ].map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-white">
+                      <Star className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleCheckout('annual')}
+                  disabled={isSubscribed && !isAdmin}
+                  className={`block w-full text-center font-bold py-4 rounded-2xl transition-all ${isSubscribed && !isAdmin
+                    ? "bg-white/10 text-gray-400 cursor-not-allowed border border-white/20"
+                    : "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] hover:scale-[1.02] cursor-pointer"
+                    }`}
+                >
+                  {isAdmin ? "Manage Dashboard" : isSubscribed ? "Plan Active" : "Get Best Deal"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 

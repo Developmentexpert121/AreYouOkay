@@ -17,7 +17,7 @@ router = APIRouter(prefix="/stripe", tags=["stripe"])
 
 
 @router.post("/create-checkout-session")
-async def create_checkout_session(user_id: int, request: Request, origin: Optional[str] = None, db: Session = Depends(database.get_db)):
+async def create_checkout_session(user_id: int, request: Request, plan: str = "monthly", origin: Optional[str] = None, db: Session = Depends(database.get_db)):
     if not stripe.api_key:
         raise HTTPException(status_code=500, detail="Stripe API key not configured")
 
@@ -44,6 +44,15 @@ async def create_checkout_session(user_id: int, request: Request, origin: Option
             host = request.headers.get("host")
             base_url = f"{scheme}://{host}"
 
+        if plan == "annual":
+            unit_amount = 5000  # $50.00 USD
+            plan_name = 'r u good? - Annual Subscription'
+            interval = 'year'
+        else:
+            unit_amount = 699   # $6.99 USD
+            plan_name = 'r u good? - Monthly Subscription'
+            interval = 'month'
+
         checkout_session = stripe.checkout.Session.create(
             customer=user.stripe_customer_id,
             payment_method_types=['card'],
@@ -52,11 +61,11 @@ async def create_checkout_session(user_id: int, request: Request, origin: Option
                     'price_data': {
                         'currency': 'usd',
                         'product_data': {
-                            'name': 'r u good? - Monthly Subscription',
+                            'name': plan_name,
                         },
-                        'unit_amount': 699,  # $6.99 USD
+                        'unit_amount': unit_amount,
                         'recurring': {
-                            'interval': 'month',
+                            'interval': interval,
                         },
                     },
                     'quantity': 1,
