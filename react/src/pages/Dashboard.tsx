@@ -45,6 +45,24 @@ export default function Dashboard() {
     emergency_contact_phone_code_2: "+1"
   });
 
+  const parsePhone = (fullPhone: string) => {
+    if (!fullPhone) return { code: "+1", num: "" };
+    
+    // Try to match against our known country codes first
+    for (const c of countryCodes) {
+      if (fullPhone.startsWith(c.code)) {
+        const num = fullPhone.slice(c.code.length).trim();
+        return { code: c.code, num };
+      }
+    }
+    
+    // Fallback: try to find any +digits pattern
+    const match = fullPhone.match(/^(\+\d+)\s*(.*)$/);
+    if (match) return { code: match[1], num: match[2] };
+    
+    return { code: "+1", num: fullPhone };
+  };
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
@@ -53,24 +71,6 @@ export default function Dashboard() {
     }
     const usr = JSON.parse(savedUser);
     setUser(usr);
-
-    const parsePhone = (fullPhone: string) => {
-      if (!fullPhone) return { code: "+1", num: "" };
-      
-      // Try to match against our known country codes first
-      for (const c of countryCodes) {
-        if (fullPhone.startsWith(c.code)) {
-          const num = fullPhone.slice(c.code.length).trim();
-          return { code: c.code, num };
-        }
-      }
-      
-      // Fallback: try to find any +digits pattern
-      const match = fullPhone.match(/^(\+\d+)\s*(.*)$/);
-      if (match) return { code: match[1], num: match[2] };
-      
-      return { code: "+1", num: fullPhone };
-    };
 
     const p1 = parsePhone(usr.phone_number);
     const p2 = parsePhone(usr.emergency_contact_phone);
