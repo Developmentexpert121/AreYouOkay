@@ -121,16 +121,13 @@ export default function Index() {
       return;
     }
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/stripe/create-checkout-session?user_id=${user.id}&plan=${plan}&origin=${encodeURIComponent(window.location.origin)}`, {
-        method: "POST"
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to start checkout");
-      window.location.href = data.url;
-    } catch (err: any) {
-      toast.error(err.message || "Failed to navigate to checkout.");
-    }
+    const yearlyLink = "https://buy.stripe.com/5kQfZh1LD2HAc3G8fN7Zu01";
+    const monthlyLink = "https://buy.stripe.com/cNicN58a14PI6Jm2Vt7Zu00";
+    const targetLink = plan === 'annual' ? yearlyLink : monthlyLink;
+
+    // Append client_reference_id so our webhook can attribute the payment to the user
+    const finalUrl = `${targetLink}?client_reference_id=${user.id}&prefilled_email=${encodeURIComponent(user.email)}`;
+    window.location.href = finalUrl;
   };
 
   return (

@@ -10,8 +10,10 @@ import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/api-config";
 
 const timezones = [
-  "UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "Europe/London", "Europe/Paris", "Asia/Tokyo", "Asia/Dubai", "Australia/Sydney"
+  "UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", 
+  "America/Sao_Paulo", "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow", 
+  "Asia/Dubai", "Asia/Riyadh", "Asia/Karachi", "Asia/Kolkata", "Asia/Shanghai", 
+  "Asia/Tokyo", "Asia/Singapore", "Australia/Sydney", "Australia/Perth", "Pacific/Auckland"
 ];
 
 const countryCodes = [
@@ -277,14 +279,15 @@ export default function Dashboard() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Time Zone</label>
-                      <Select value={profileForm.timezone} onValueChange={(v) => setProfileForm({ ...profileForm, timezone: v })}>
-                        <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl font-medium">
-                          <SelectValue placeholder="Select timezone" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
-                          {timezones.map(tz => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <select 
+                        value={profileForm.timezone} 
+                        onChange={(e) => setProfileForm({ ...profileForm, timezone: e.target.value })}
+                        className="flex h-12 w-full rounded-xl border border-white/20 bg-black/50 px-3 py-2 text-sm text-white focus:border-blue-500 focus:ring-blue-500/20 focus-visible:outline-none ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {timezones.map(tz => (
+                          <option key={tz} value={tz} className="bg-black text-white">{tz}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Check-in Time</label>
