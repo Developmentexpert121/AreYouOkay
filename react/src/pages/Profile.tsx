@@ -43,6 +43,9 @@ export default function Profile() {
     emergency_contact_name_2: "",
     emergency_contact_phone_2: "",
     emergency_contact_phone_code_2: "+1",
+    emergency_contact_name_3: "",
+    emergency_contact_phone_3: "",
+    emergency_contact_phone_code_3: "+1",
     reminder_delay_minutes: 30,
     escalation_delay_minutes: 60,
   });
@@ -74,6 +77,7 @@ export default function Profile() {
       const p1 = parsePhone(parsed.phone_number);
       const p2 = parsePhone(parsed.emergency_contact_phone);
       const p3 = parsePhone(parsed.emergency_contact_phone_2);
+      const p4 = parsePhone(parsed.emergency_contact_name_3 ? parsed.emergency_contact_phone_3 : "");
 
       setFormData({
         name: parsed.name || "",
@@ -87,6 +91,9 @@ export default function Profile() {
         emergency_contact_name_2: parsed.emergency_contact_name_2 || "",
         emergency_contact_phone_2: p3.num,
         emergency_contact_phone_code_2: p3.code,
+        emergency_contact_name_3: parsed.emergency_contact_name_3 || "",
+        emergency_contact_phone_3: p4.num,
+        emergency_contact_phone_code_3: p4.code,
         reminder_delay_minutes: parsed.reminder_delay_minutes ?? 30,
         escalation_delay_minutes: parsed.escalation_delay_minutes ?? 60,
       });
@@ -118,6 +125,10 @@ export default function Profile() {
       toast.error("Secondary contact phone must be between 7 and 15 digits");
       return;
     }
+    if (formData.emergency_contact_phone_3 && !validatePhone(formData.emergency_contact_phone_3)) {
+      toast.error("Third contact phone must be between 7 and 15 digits");
+      return;
+    }
 
     setLoading(true);
 
@@ -128,6 +139,9 @@ export default function Profile() {
         emergency_contact_phone: `${formData.emergency_contact_phone_code} ${formData.emergency_contact_phone.replace(/\D/g, "")}`,
         emergency_contact_phone_2: formData.emergency_contact_phone_2 
           ? `${formData.emergency_contact_phone_code_2} ${formData.emergency_contact_phone_2.replace(/\D/g, "")}` 
+          : "",
+        emergency_contact_phone_3: formData.emergency_contact_phone_3 
+          ? `${formData.emergency_contact_phone_code_3} ${formData.emergency_contact_phone_3.replace(/\D/g, "")}` 
           : ""
       };
 
@@ -151,6 +165,7 @@ export default function Profile() {
       const p1 = parsePhone(updatedUser.phone_number);
       const p2 = parsePhone(updatedUser.emergency_contact_phone);
       const p3 = parsePhone(updatedUser.emergency_contact_phone_2);
+      const p4 = parsePhone(updatedUser.emergency_contact_phone_3);
 
       setFormData(prev => ({
         ...prev,
@@ -160,6 +175,8 @@ export default function Profile() {
         emergency_contact_phone_code: p2.code,
         emergency_contact_phone_2: p3.num,
         emergency_contact_phone_code_2: p3.code,
+        emergency_contact_phone_3: p4.num,
+        emergency_contact_phone_code_3: p4.code,
       }));
 
       toast.success("Profile updated successfully!");
@@ -375,7 +392,12 @@ export default function Profile() {
                   <div className="space-y-2">
                     <label htmlFor="timezone" className="text-gray-400 font-bold text-xs uppercase tracking-wider">Timezone</label>
                     <select id="timezone" value={formData.timezone} onChange={handleChange} className="flex h-12 w-full rounded-xl border border-white/20 bg-black/50 px-3 py-2 text-sm text-white focus:border-blue-500 focus:ring-blue-500/20 focus-visible:outline-none ring-offset-background disabled:cursor-not-allowed disabled:opacity-50">
-                      {["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "Europe/Paris", "Asia/Tokyo", "Asia/Dubai", "Australia/Sydney"].map(tz => (
+                      {[
+                        "UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", 
+                        "America/Sao_Paulo", "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow", 
+                        "Asia/Dubai", "Asia/Riyadh", "Asia/Karachi", "Asia/Kolkata", "Asia/Shanghai", 
+                        "Asia/Tokyo", "Asia/Singapore", "Australia/Sydney", "Australia/Perth", "Pacific/Auckland"
+                      ].map(tz => (
                         <option key={tz} value={tz} className="bg-black text-white">{tz}</option>
                       ))}
                     </select>
@@ -456,6 +478,33 @@ export default function Profile() {
                           value={formData.emergency_contact_phone_2}
                           onChange={(e) => setFormData({ ...formData, emergency_contact_phone_2: e.target.value.slice(0, 20) })}
                           placeholder="Secondary contact phone"
+                          className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                    <div className="space-y-2">
+                      <label htmlFor="emergency_contact_name_3" className="text-gray-400 font-bold text-xs uppercase tracking-wider">Third Contact Name (Optional)</label>
+                      <Input id="emergency_contact_name_3" value={formData.emergency_contact_name_3} onChange={handleChange} className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="emergency_contact_phone_3" className="text-gray-400 font-bold text-xs uppercase tracking-wider">Third Contact Line</label>
+                      <div className="flex gap-2">
+                        <Select value={formData.emergency_contact_phone_code_3} onValueChange={(v) => setFormData({ ...formData, emergency_contact_phone_code_3: v })}>
+                          <SelectTrigger className="w-[110px] h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                            {countryCodes.map(c => <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          id="emergency_contact_phone_3"
+                          value={formData.emergency_contact_phone_3}
+                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone_3: e.target.value.slice(0, 20) })}
+                          placeholder="Third contact phone"
                           className="h-12 bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-blue-500 rounded-xl flex-1"
                         />
                       </div>

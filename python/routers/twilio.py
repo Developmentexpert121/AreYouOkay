@@ -98,26 +98,33 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
                             _send_sms(client, str(contact[0]).replace(" ", ""), msg)
                             _log_alert(db, user.id, checkin.id, "false_alarm_resolution", contact[1] or "Contact", contact[0], msg, True)
 
-            elif body in ("NO", "N"):
-                # Accelerate them immediately to the start of the escalation funnel
-                # Prompt requirement: "If you type no, we will contact your primary contact person immediately."
-                checkin.status = "escalated_1_sms"
-                checkin.scheduled_for = datetime.utcnow() - timedelta(minutes=1000) # Ensure it passes the elapsed minutes checks
+        elif body in ("NO", "N"):
+            # Immediately escalate to all contacts
+            checkin.status = "missed"
+            checkin.responded_at = datetime.utcnow()
+            db.commit()
+
+            if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
                 
-                checkin.responded_at = datetime.utcnow()
-                db.commit()
+                # Notify the user
+                if user.phone_number:
+                    _send_sms(client, str(user.phone_number).replace(" ", ""), "We are contacting ALL your emergency contacts now..")
 
-                if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and user.phone_number:
-                    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-                    _send_sms(client, str(user.phone_number).replace(" ", ""), "We are contacting your emergency contact now..")
-
-                if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and user.emergency_contact_phone:
-                    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-                    emergency_number = user.emergency_contact_phone.replace(" ", "")
-                    contact_name = user.emergency_contact_name or "Emergency Contact"
-                    msg = f"{user.name} has you as an emergency contact. Please check in to make sure that everything is ok, and let us know. Thanks."
-                    ok = _send_sms(client, emergency_number, msg)
-                    _log_alert(db, user.id, checkin.id, "emergency_no", contact_name, emergency_number, msg, ok)
+                # Notify all contacts
+                msg = f"URGENT: {user.name} just replied 'NO' to their r u good? safety check-in. Please check on them immediately."
+                
+                contacts = [
+                    (user.emergency_contact_phone, user.emergency_contact_name),
+                    (user.emergency_contact_phone_2, user.emergency_contact_name_2),
+                    (user.emergency_contact_phone_3, user.emergency_contact_name_3),
+                ]
+                
+                for phone, name in contacts:
+                    if phone:
+                        phone_clean = str(phone).replace(" ", "")
+                        ok = _send_sms(client, phone_clean, msg)
+                        _log_alert(db, user.id, checkin.id, "emergency_no_all", name or "Contact", phone_clean, msg, ok)
 
     # Return empty TwiML so Twilio doesn't retry
     return Response(content="<?xml version='1.0' encoding='UTF-8'?><Response></Response>",

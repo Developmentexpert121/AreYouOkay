@@ -154,16 +154,13 @@ export function AppSidebar() {
                               <NavLink
                                 to={item.url}
                                 end
-                                className={({ isActive }) => {
-                                  const active = isActive;
-                                  return `flex w-full items-center gap-4 px-4 py-3 rounded-xl transition-all relative overflow-hidden ${active
-                                      ? "bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500 shadow-lg"
-                                      : "text-gray-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10"
-                                    }`;
-                                }}
+                                className="flex w-full items-center h-full"
                               >
                                 {({ isActive }) => (
-                                  <>
+                                  <div className={`flex w-full items-center gap-4 px-4 py-3 rounded-xl transition-all relative overflow-hidden h-full ${isActive
+                                      ? "bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500 shadow-lg"
+                                      : "text-gray-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10"
+                                    }`}>
                                     {isActive && (
                                       <motion.div
                                         layoutId="activeTab"
@@ -186,7 +183,7 @@ export function AppSidebar() {
                                         transition={{ duration: 0.2 }}
                                       />
                                     )}
-                                  </>
+                                  </div>
                                 )}
                               </NavLink>
                             </SidebarMenuButton>

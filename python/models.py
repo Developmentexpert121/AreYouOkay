@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from database import Base
 import datetime
 
@@ -40,6 +41,9 @@ class User(Base):
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+    checkins = relationship("CheckInTrack", back_populates="user", cascade="all, delete-orphan")
+    alert_logs = relationship("AlertLog", back_populates="user", cascade="all, delete-orphan")
+
 
 class CheckInTrack(Base):
     __tablename__ = "check_ins"
@@ -50,6 +54,9 @@ class CheckInTrack(Base):
     status = Column(String, default="pending")  # pending, reminded, completed, missed, escalated
     reminder_sent = Column(Boolean, default=False)
     responded_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", back_populates="checkins")
+    alerts = relationship("AlertLog", back_populates="checkin")
 
 
 class AlertLog(Base):
@@ -64,3 +71,6 @@ class AlertLog(Base):
     message_body = Column(String, nullable=True)
     sent_at = Column(DateTime, default=datetime.datetime.utcnow)
     success = Column(Boolean, default=True)
+
+    user = relationship("User", back_populates="alert_logs")
+    checkin = relationship("CheckInTrack", back_populates="alerts")
