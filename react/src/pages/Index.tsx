@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring, animate, useInView } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight, Shield, Clock, HeartHandshake, PhoneCall,
@@ -84,6 +84,24 @@ const GlowText = ({ children, className = "" }: { children: React.ReactNode; cla
   </motion.span>
 );
 
+const StatCounter = ({ value, suffix = "", prefix = "" }: { value: number | string, suffix?: string, prefix?: string }) => {
+  const numValue = typeof value === "number" ? value : parseFloat(value);
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.floor(latest));
+  const displayValue = useTransform(rounded, (v) => `${prefix}${v}${suffix}`);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  useEffect(() => {
+    if (isInView) {
+      const animation = animate(count, numValue, { duration: 2, ease: "easeOut" });
+      return animation.stop;
+    }
+  }, [numValue, count, isInView]);
+
+  return <motion.span ref={ref}>{displayValue}</motion.span>;
+};
+
 export default function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -134,7 +152,7 @@ export default function Index() {
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       {/* ── NAV (Glassmorphic) ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between py-4">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between ">
           <div className="flex items-center gap-3">
             <motion.div
               whileHover={{ rotate: 10, scale: 1.1 }}
@@ -364,7 +382,7 @@ export default function Index() {
             <motion.div
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="hidden xl:block absolute -right-2 sm:-right-4 bottom-12 bg-black/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl max-w-[150px] sm:max-w-[190px] z-10 border border-white/10"
+              className="hidden xl:block absolute -right-2 sm:-right-0 z-50 bottom-12 bg-black/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl max-w-[150px] sm:max-w-[190px] z-10 border border-white/10"
             >
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-8 h-8 bg-amber-500/20 rounded-xl flex items-center justify-center">
@@ -382,7 +400,7 @@ export default function Index() {
               initial={{ opacity: 0, y: 40, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
-              className="relative z-20 w-[180px] sm:w-[240px] md:w-[270px]"
+              className="relative z-20 w-full max-w-[300px]"
             >
               <div className="relative">
                 <motion.div
@@ -469,10 +487,10 @@ export default function Index() {
       <section className="bg-black py-16 border-b border-white/10">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { value: "99.9%", label: "Uptime Reliability", icon: Gauge },
-            { value: "24/7", label: "Safety Monitoring", icon: Radar },
-            { value: "15k+", label: "Check-ins Sent", icon: Activity },
-            { value: "< 1min", label: "Alert Response", icon: Zap },
+            { value: 99, suffix: "%", label: "Uptime Reliability", icon: Gauge },
+            { value: 24, suffix: "/7", label: "Safety Monitoring", icon: Radar },
+            { value: 15000, suffix: "+", label: "Check-ins Sent", icon: Activity },
+            { value: 1, prefix: "< ", suffix: "min", label: "Alert Response", icon: Zap },
           ].map((s, i) => (
             <motion.div
               key={i}
@@ -483,8 +501,12 @@ export default function Index() {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
                 <s.icon className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                <p className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  {s.value}
+                <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  <StatCounter
+                    value={s.value}
+                    suffix={s.suffix}
+                    prefix={s.prefix}
+                  />
                 </p>
                 <p className="text-gray-400 text-sm font-medium mt-1">{s.label}</p>
               </div>
@@ -829,9 +851,9 @@ export default function Index() {
         <div className="absolute bottom-0 right-1/4 w-96 h-[400px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32 mb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 lg:gap-32 mb-20">
             {/* Column 1: Brand & Identity */}
-            <div className="space-y-8">
+            <div className="">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center rotate-3">
                   <img src="/final logo.png" alt="Logo" className="w-20 h-20 object-contain" />
@@ -842,8 +864,27 @@ export default function Index() {
                 Redefining personal safety through <span className="text-white">intelligent automation</span>.
                 Keep your loved ones informed, always.
               </p>
+              <div className="flex gap-4 pt-2 mt-2">
 
-              <div className="flex flex-col gap-5">
+                {[
+                  { icon: Facebook, href: "https://www.facebook.com/MichellePriceJohnson", color: "hover:bg-blue-600/20 hover:text-blue-500" },
+                  { icon: Linkedin, href: "https://www.linkedin.com/in/michellepricejohnson/", color: "hover:bg-blue-400/20 hover:text-blue-400" },
+                  { icon: Instagram, href: "https://www.instagram.com/michellepricejohnson/", color: "hover:bg-pink-600/20 hover:text-pink-500" }
+                ].map((s, i) => (
+                  <motion.a
+                    key={i}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ y: -5, scale: 1.05 }}
+                    className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 transition-all ${s.color} shadow-sm backdrop-blur-md`}
+                  >
+                    <s.icon className="w-6 h-6" />
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* <div className="flex flex-col gap-5">
                 <a
                   href="https://maps.google.com/?q=1982+Providence+Parkway,+Suite+251+Mt.+Juliet,+TN+37122"
                   target="_blank"
@@ -877,7 +918,7 @@ export default function Index() {
                     </motion.a>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Column 2: Success Lab & Quote */}
@@ -901,25 +942,50 @@ export default function Index() {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
-                    <a href="mailto:mpj@successlabhq.com" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
-                        <MessageSquare className="w-4 h-4 text-blue-400" />
-                      </div>
-                      <span className="text-sm font-medium">mpj@successlabhq.com</span>
-                    </a>
-                    <a href="tel:6154366176" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
-                        <PhoneCall className="w-4 h-4 text-blue-400" />
-                      </div>
-                      <span className="text-sm font-medium">615-436-6176 x 3</span>
-                    </a>
-                  </div>
+
                 </div>
               </div>
 
 
             </div>
+            <div className="">
+              <h5 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-500" /> contact us
+              </h5>
+              <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
+
+                <div className="flex flex-col gap-5">
+                  <a
+                    href="https://maps.google.com/?q=1982+Providence+Parkway,+Suite+251+Mt.+Juliet,+TN+37122"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-4 text-gray-400 hover:text-white transition-all group w-fit"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500/10 group-hover:border-blue-500/50 transition-all">
+                      <MapPin className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Headquarters</span>
+                      <span className="text-sm font-semibold">1982 Providence Parkway, Mt. Juliet, TN</span>
+                    </div>
+                  </a>
+                </div>
+                <a href="mailto:mpj@successlabhq.com" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+                    <MessageSquare className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm font-medium">mpj@successlabhq.com</span>
+                </a>
+                <a href="tel:6154366176" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+                    <PhoneCall className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <span className="text-sm font-medium">615-436-6176 x 3</span>
+                </a>
+
+              </div>
+            </div>
+
           </div>
 
           {/* Bottom Bar */}
@@ -943,6 +1009,7 @@ export default function Index() {
           </div>
         </div>
       </footer>
+
     </div>
   );
 }

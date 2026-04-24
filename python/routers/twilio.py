@@ -46,67 +46,75 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
     from sqlalchemy import func
     from_number_clean = from_number.replace(" ", "")
 
-    # Search for an active check-in where the sender is either the user or their emergency contact
-    checkin = db.query(models.CheckInTrack).join(models.User).filter(
+    # Search for ALL active check-ins where the sender is either the user or their emergency contact
+    active_checkins = db.query(models.CheckInTrack).join(models.User).filter(
         (func.replace(models.User.phone_number, " ", "") == from_number_clean) |
         (func.replace(models.User.emergency_contact_phone, " ", "") == from_number_clean) |
         (func.replace(models.User.emergency_contact_phone_2, " ", "") == from_number_clean) |
         (func.replace(models.User.emergency_contact_phone_3, " ", "") == from_number_clean)
     ).filter(
         models.CheckInTrack.status.notin_(["completed", "missed", "emergency_acknowledged"])
-    ).order_by(models.CheckInTrack.scheduled_for.desc()).first()
+    ).order_by(models.CheckInTrack.scheduled_for.desc()).all()
 
-    if checkin:
-        user = checkin.user # SQLAlchemy join gives access to user
+    if active_checkins:
+        # We'll work with the most recent check-in for primary context, but resolve all
+        main_checkin = active_checkins[0]
+        user = main_checkin.user
+        client = None
+        if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+            client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+        is_user_reply = from_number_clean == (user.phone_number or "").replace(" ", "")
+        
+        escalated_statuses = {
+            "escalated_1_sms", "escalated_1_voice", 
+            "escalated_2_sms", "escalated_2_voice",
+            "escalated_3_sms", "escalated_3_voice"
+        }
+
         if body in ("YES", "Y"):
-            previous_status = checkin.status
-            checkin.status = "completed"
-            checkin.responded_at = datetime.utcnow()
+            was_any_escalated = False
+            for checkin in active_checkins:
+                if checkin.status in escalated_statuses:
+                    was_any_escalated = True
+                
+                checkin.status = "completed"
+                checkin.responded_at = datetime.utcnow()
+            
             db.commit()
             
-            # Identify who replied
-            is_user_reply = from_number_clean == (user.phone_number or "").replace(" ", "")
-            
             # Send celebration emoji only if the USER themselves replied
-            if is_user_reply and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and user.phone_number:
-                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+            if is_user_reply and client and user.phone_number:
                 _send_sms(client, str(user.phone_number).replace(" ", ""), "🥳")
             
-            # If an emergency contact replied, log it specifically
+            # If an emergency contact replied, log it
             if not is_user_reply:
-                _log_alert(db, user.id, checkin.id, "emergency_resolved_by_contact", 
+                _log_alert(db, user.id, main_checkin.id, "emergency_resolved_by_contact", 
                            "Emergency Contact", from_number, "Emergency contact confirmed safety via SMS.", True)
 
-                # If the check-in was already escalated, send a False Alarm notice to emergency contact
-                escalated_statuses = {
-                    "escalated_1_sms", "escalated_1_voice", 
-                    "escalated_2_sms", "escalated_2_voice",
-                    "escalated_3_sms", "escalated_3_voice"
-                }
-                if previous_status in escalated_statuses and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
-                    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+                # If ANY resolved check-in was already escalated, send a False Alarm notice to emergency contacts
+                if was_any_escalated and client:
                     msg = (
-                        f"UPDATE: {user.name} has just replied to their r u good? check-in "
-                        f"and is safe. The previous alert was a false alarm."
+                        f"UPDATE: {user.name} has just been confirmed safe. "
+                        f"The previous alert was a false alarm."
                     )
-                    for contact in [
+                    for contact_phone, contact_name in [
                         (user.emergency_contact_phone, user.emergency_contact_name),
                         (user.emergency_contact_phone_2, user.emergency_contact_name_2),
                         (user.emergency_contact_phone_3, user.emergency_contact_name_3)
                     ]:
-                        if contact[0]:
-                            _send_sms(client, str(contact[0]).replace(" ", ""), msg)
-                            _log_alert(db, user.id, checkin.id, "false_alarm_resolution", contact[1] or "Contact", contact[0], msg, True)
+                        if contact_phone:
+                            _send_sms(client, str(contact_phone).replace(" ", ""), msg)
+                            _log_alert(db, user.id, main_checkin.id, "false_alarm_resolution", contact_name or "Contact", contact_phone, msg, True)
 
         elif body in ("NO", "N"):
-            # Immediately escalate to all contacts
-            checkin.status = "missed"
-            checkin.responded_at = datetime.utcnow()
+            # Mark all as missed
+            for checkin in active_checkins:
+                checkin.status = "missed"
+                checkin.responded_at = datetime.utcnow()
             db.commit()
 
-            if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
-                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-                
+            if client:
                 # Notify the user
                 if user.phone_number:
                     _send_sms(client, str(user.phone_number).replace(" ", ""), "We are contacting ALL your emergency contacts now..")
@@ -124,7 +132,7 @@ async def twilio_webhook(request: Request, db: Session = Depends(database.get_db
                     if phone:
                         phone_clean = str(phone).replace(" ", "")
                         ok = _send_sms(client, phone_clean, msg)
-                        _log_alert(db, user.id, checkin.id, "emergency_no_all", name or "Contact", phone_clean, msg, ok)
+                        _log_alert(db, user.id, main_checkin.id, "emergency_no_all", name or "Contact", phone_clean, msg, ok)
 
     # Return empty TwiML so Twilio doesn't retry
     return Response(content="<?xml version='1.0' encoding='UTF-8'?><Response></Response>",

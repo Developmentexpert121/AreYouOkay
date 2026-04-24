@@ -73,9 +73,28 @@ def check_and_send_messages():
             target_utc_dt = target_local_dt.astimezone(pytz.utc).replace(tzinfo=None)
 
             if local_time >= target_local_dt:
-                # Check if a check-in already exists for THIS SPECIFIC target time
-                # This allows re-triggering if the user changes their time to a later slot on the same day
+                # Check if the user has ALREADY COMPLETED a check-in for today.
+                # If they have, we don't send any more messages for the day.
+                
+                start_of_day_local = target_local_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_of_day_local = start_of_day_local + timedelta(days=1)
+                
+                start_of_day_utc = start_of_day_local.astimezone(pytz.utc).replace(tzinfo=None)
+                end_of_day_utc = end_of_day_local.astimezone(pytz.utc).replace(tzinfo=None)
 
+                completed_today = db.query(models.CheckInTrack).filter(
+                    models.CheckInTrack.user_id == user.id,
+                    models.CheckInTrack.scheduled_for >= start_of_day_utc,
+                    models.CheckInTrack.scheduled_for < end_of_day_utc,
+                    models.CheckInTrack.status.in_(["completed", "emergency_acknowledged"])
+                ).first()
+
+                if completed_today:
+                    continue
+
+                # Check if a check-in already exists for THIS SPECIFIC target time
+                # This allows re-triggering if the user changes their time to a later slot on the same day,
+                # as long as they haven't finished a check-in yet.
                 existing = db.query(models.CheckInTrack).filter(
                     models.CheckInTrack.user_id == user.id,
                     models.CheckInTrack.scheduled_for == target_utc_dt
